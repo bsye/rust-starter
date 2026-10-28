@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { BENCH_DIR, log } from './scripts/lib.mjs'
 
 const PARTS = {
@@ -15,7 +15,9 @@ const parts = command === 'all' ? Object.keys(PARTS) : command === 'report' ? []
 for (const part of parts) {
   if (!PARTS[part]) throw new Error(`unknown part ${part}; use all, report, ${Object.keys(PARTS).join(', ')}`)
   log(`running ${part}`)
-  writeFileSync(`${resultsDir}/${part}.json`, JSON.stringify(await PARTS[part](), null, 2))
+  const file = `${resultsDir}/${part}.json`
+  const previous = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
+  writeFileSync(file, JSON.stringify({ ...previous, ...await PARTS[part]() }, null, 2))
 }
 
 if (['features', 'production', 'devloop'].every(part => existsSync(`${resultsDir}/${part}.json`))) {

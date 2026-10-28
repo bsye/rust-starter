@@ -89,67 +89,65 @@ async function logicChange(app) {
   return samples
 }
 
-async function checks(app) {
-  compose(app, 'exec', '-T', 'app', ...STACKS[app].check)
-  const samples = []
-  for (let run = 0; run < RUNS; run++) {
-    samples.push(await timed(async () => compose(app, 'exec', '-T', 'app', ...STACKS[app].check)))
-  }
-  return samples
-}
-
 function removeBuilder() {
   if (docker('buildx', 'ls', '--format', '{{.Name}}').split('\n').includes(BUILDER)) {
     docker('buildx', 'rm', '--force', BUILDER)
   }
 }
 
-async function imageBuilds(app) {
+async function imageBuild(app) {
   const stack = STACKS[app]
   const build = () => docker('buildx', 'build', '--builder', BUILDER, '--target', 'prod', '--output', 'type=cacheonly', stack.dir)
-  const cold = []
-  const warm = []
-  for (let run = 0; run < RUNS; run++) {
-    removeBuilder()
-    docker('buildx', 'create', '--name', BUILDER, '--driver', 'docker-container')
-    sh('docker', ['buildx', 'build', '--builder', BUILDER, '--output', 'type=cacheonly', '-'],
-      { input: stack.baseImages.map(image => `FROM ${image}`).join('\n') + '\n', stdio: ['pipe', 'pipe', 'pipe'] })
-    cold.push(await timed(async () => build()))
-    const touched = `${stack.dir}/${stack.touchFile}`
-    const original = readFileSync(touched, 'utf8')
-    writeFileSync(touched, `${original}\n`)
-    warm.push(await timed(async () => build()))
-    writeFileSync(touched, original)
-  }
+  removeBuilder()
+  docker('buildx', 'create', '--name', BUILDER, '--driver', 'docker-container')
+  sh('docker', ['buildx', 'build', '--builder', BUILDER, '--output', 'type=cacheonly', '-'],
+    { input: stack.baseImages.map(image => `FROM ${image}`).join('\n') + '\n', stdio: ['pipe', 'pipe', 'pipe'] })
+  const cold = await timed(async () => build())
+  const touched = `${stack.dir}/${stack.touchFile}`
+  const original = readFileSync(touched, 'utf8')
+  writeFileSync(touched, `${original}\n`)
+  const warm = await timed(async () => build())
+  writeFileSync(touched, original)
   removeBuilder()
   return { cold, warm }
+}
+
+async function alternating(apps, label, measure) {
+  for (let run = 0; run < RUNS; run++) {
+    for (const app of run % 2 ? [...apps].reverse() : apps) {
+      log(`${label} ${app} (${run + 1}/${RUNS})`)
+      await measure(app)
+    }
+  }
 }
 
 export async function devloop() {
   docker('build', '-t', TOOLS_IMAGE, `${BENCH_DIR}/tools`)
   freshClone()
-  const results = {}
-  for (const app of (process.env.BENCH_APPS ?? 'rust,nuxt').split(',')) {
-    const result = { firstRunMs: [], restartMs: [] }
-    for (let run = 0; run < RUNS; run++) {
-      log(`first run ${app} (${run + 1}/${RUNS})`)
-      result.firstRunMs.push(await firstRun(app))
-    }
-    for (let run = 0; run < RUNS; run++) {
-      log(`restart ${app} (${run + 1}/${RUNS})`)
-      result.restartMs.push(await restart(app))
-    }
+  const apps = (process.env.BENCH_APPS ?? 'rust,nuxt').split(',')
+  const results = Object.fromEntries(apps.map(app => [app, { firstRunMs: [], restartMs: [], checksMs: [], imageBuildMs: { cold: [], warm: [] } }]))
+  await alternating(apps, 'first run', async app => results[app].firstRunMs.push(await firstRun(app)))
+  await alternating(apps, 'restart', async app => results[app].restartMs.push(await restart(app)))
+  for (const app of apps) {
     log(`markup change ${app}`)
-    result.markupChange = markupChange(app)
-    log(`logic change ${app}`)
-    result.logicChangeMs = await logicChange(app)
-    log(`checks ${app}`)
-    result.checksMs = await checks(app)
-    compose(app, 'down', '--volumes', '--remove-orphans')
-    log(`image builds ${app}`)
-    result.imageBuildMs = await imageBuilds(app)
-    results[app] = result
+    results[app].markupChange = markupChange(app)
   }
+  for (const app of [...apps].reverse()) {
+    log(`logic change ${app}`)
+    results[app].logicChangeMs = await logicChange(app)
+  }
+  for (const app of apps) {
+    compose(app, 'exec', '-T', 'app', ...STACKS[app].check)
+  }
+  await alternating(apps, 'checks', async app => results[app].checksMs.push(await timed(async () => compose(app, 'exec', '-T', 'app', ...STACKS[app].check))))
+  for (const app of apps) {
+    compose(app, 'down', '--volumes', '--remove-orphans')
+  }
+  await alternating(apps, 'image build', async (app) => {
+    const { cold, warm } = await imageBuild(app)
+    results[app].imageBuildMs.cold.push(cold)
+    results[app].imageBuildMs.warm.push(warm)
+  })
   rmSync(WORK_DIR, { recursive: true, force: true })
   return results
 }
