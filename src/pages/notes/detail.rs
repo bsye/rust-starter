@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
-use dioxus_icons::lucide::ArrowLeft;
+use dioxus_icons::lucide::{ArrowLeft, Pencil};
 
-use super::skeleton::NoteDetailSkeleton;
+use super::{delete::DeleteNoteButton, skeleton::NoteDetailSkeleton};
 use crate::api::{ApiError, Note, get_note};
 use crate::app::Route;
-use crate::components::{button::ButtonVariant, card::Card};
+use crate::components::card::Card;
 use crate::ui::{ButtonLink, LoadError, Missing, PageHeader, format};
 
 #[component]
@@ -45,11 +45,18 @@ fn NoteLoader(id: ReadSignal<i64>) -> Element {
 #[component]
 fn NoteView(note: Note) -> Element {
     rsx! {
+        Link {
+            class: "mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground",
+            to: Route::Notes { page: 1 },
+            ArrowLeft { size: "1rem" }
+            "All notes"
+        }
         PageHeader { title: note.title,
-            ButtonLink { to: Route::Notes { page: 1 }, variant: ButtonVariant::Outline,
-                ArrowLeft {}
-                "All notes"
+            ButtonLink { to: Route::EditNote { id: note.id },
+                Pencil {}
+                "Edit"
             }
+            DeleteNoteButton { id: note.id }
         }
         p { class: "mb-4 text-sm text-muted", {format::date(note.created_at)} }
         if !note.body.is_empty() {

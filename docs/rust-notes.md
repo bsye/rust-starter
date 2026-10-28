@@ -71,3 +71,28 @@ flowchart LR
 | Reactive props | `page: ReadSignal<u64>` in `src/pages/notes/list.rs:11` | A plain `u64` prop would be read once; a `ReadSignal` makes `use_server_future` run again when the page number changes | [Dioxus props](https://dioxuslabs.com/learn/0.7/essentials/ui/components/) |
 | `matches!` | `src/app.rs:25` | `true` if a value fits a pattern; `{ .. }` ignores the fields | [Reference](https://doc.rust-lang.org/std/macro.matches.html) |
 | Async tests | `#[sqlx::test]` in `src/server/notes.rs`, `tokio::join!` in `src/server/db.rs:33` | Each test gets its own empty database; `join!` runs two futures at the same time | [ch11-01](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) |
+
+## Phase 4: auth
+
+```mermaid
+flowchart LR
+  B[Browser] -- "cookie: session id" --> O[origin check] --> S[session layer: loads the user]
+  S --> F[server function] -- "require_actor()" --> A[Actor]
+  A -- "scoped(actor)" --> D[(notes of that user only)]
+```
+
+| Concept | Where | In one line | Read |
+|---|---|---|---|
+| Privacy as a guarantee | `pub struct Actor(i64)` in `src/server/auth/mod.rs:65` | The field is private, so only the `auth` module can make an `Actor`. Every note function asks for one, so the compiler refuses code that skips the sign-in check | [ch07-03](https://doc.rust-lang.org/book/ch07-03-paths-for-referring-to-an-item-in-the-module-tree.html) |
+| `pub(super)` | `Actor::trusted` in `src/server/auth/mod.rs:72` | Visible to the parent module only: the seed command can use it, pages and API code cannot | [Reference](https://doc.rust-lang.org/reference/visibility-and-privacy.html) |
+| Type aliases | `pub type Auth = AuthSession<...>` in `src/server/auth/mod.rs:16` | A short name for a long generic type | [ch20-03](https://doc.rust-lang.org/book/ch20-03-advanced-types.html) |
+| Implementing a library's trait | `impl Authentication<User, i64, PgPool> for User` in `src/server/auth/mod.rs:37` | The session library calls our `load_user` when it needs the user behind a session id | [ch10-02](https://doc.rust-lang.org/book/ch10-02-traits.html) |
+| Generics with `impl Trait` | `conn: &impl ConnectionTrait`, `entity_ids: impl IntoIterator<Item = i64>` in `src/server/audit.rs:23-27` | One function that works with a connection or a transaction, and with an array or a `Vec` of ids | [ch10-01](https://doc.rust-lang.org/book/ch10-01-syntax.html) |
+| `move` closures on another thread | `spawn_blocking(move \|\| ...)` in `src/server/auth/password.rs:15`, `:24` | Hashing is slow on purpose, so it runs on a blocking thread; `move` hands the password to that thread | [ch16-01](https://doc.rust-lang.org/book/ch16-01-threads.html) |
+| `static` with `LazyLock` | `DECOY_HASH` in `src/server/auth/password.rs:10` | A value computed once, on first use, and shared for the life of the program | [std](https://doc.rust-lang.org/std/sync/struct.LazyLock.html) |
+| Match guards | `Err(error) if matches!(...)` in `src/server/auth/accounts.rs:31`, `Some(model) if password_ok` at `:50` | A pattern plus a condition; the unique-email error becomes a field error, everything else falls through | [ch19-03](https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html) |
+| Matching on a tuple | `match (input.validated(), self.id)` in `src/hooks/note_form.rs:43` | Decide on two values at once: valid input plus an id means update, no id means create | [ch19-03](https://doc.rust-lang.org/book/ch19-03-pattern-syntax.html) |
+| `let ... else` | `src/api/auth.rs:146` | Destructure or leave the block; used in tests to pull the field errors out of `ApiError::Invalid` | [Reference](https://doc.rust-lang.org/reference/statements.html#let-else-statements) |
+| Drop rolls back | `let txn = db.begin()` ... `txn.commit()` in `src/server/notes.rs` | If any `?` returns early, the transaction is dropped without `commit` and rolls back: the note and its audit row are saved together or not at all | [ch15-03](https://doc.rust-lang.org/book/ch15-03-drop.html) |
+| `cfg` on statements | `request_user` in `src/api/auth.rs:95-98` | One function, two bodies: the server reads the session, the browser build never calls it and says so with `unreachable!` | [Reference](https://doc.rust-lang.org/reference/conditional-compilation.html) |
+| Tests that read source | `include_str!` in `src/server/notes_tests.rs:22`, `src/ui/component_styles.rs:48` | Architecture rules as tests: only `scoped()` may query notes, and every component stylesheet must be linked | [std](https://doc.rust-lang.org/std/macro.include_str.html) |

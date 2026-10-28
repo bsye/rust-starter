@@ -180,3 +180,6 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 - `src/components/` is `dx components add` output; leave it as generated (patches are listed in
   `docs/design-notes.md`) and put shared UI in `src/ui/`.
 - Every cargo and dx command runs inside the `app` container (`docker compose exec app ...`).
+- After `dx components add`, add the new `style.css` to `COMPONENT_STYLES` in `src/ui/component_styles.rs` (a test fails
+  otherwise).
+- Note queries start from `scoped(actor)` in `src/server/notes.rs`; new resources follow the same pattern.

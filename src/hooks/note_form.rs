@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus::router::Navigator;
 
-use crate::api::{ApiError, FieldErrors, NoteInput, create_note};
+use crate::api::{FieldErrors, Note, NoteInput, create_note, update_note};
 use crate::app::Route;
 
 #[derive(Clone, Copy)]
@@ -9,18 +9,22 @@ pub struct NoteForm {
     pub title: Signal<String>,
     pub body: Signal<String>,
     pub errors: Signal<FieldErrors>,
-    pub failure: Signal<Option<String>>,
     pub saving: Signal<bool>,
+    id: Option<i64>,
     nav: Navigator,
 }
 
-pub fn use_note_form() -> NoteForm {
+pub fn use_note_form(existing: Option<Note>) -> NoteForm {
+    let id = existing.as_ref().map(|note| note.id);
+    let (title, body) = existing
+        .map(|note| (note.title, note.body))
+        .unwrap_or_default();
     NoteForm {
-        title: use_signal(String::new),
-        body: use_signal(String::new),
+        title: use_signal(|| title),
+        body: use_signal(|| body),
         errors: use_signal(FieldErrors::default),
-        failure: use_signal(|| None),
         saving: use_signal(|| false),
+        id,
         nav: navigator(),
     }
 }
@@ -36,21 +40,17 @@ impl NoteForm {
             title: self.title.cloned(),
             body: self.body.cloned(),
         };
-        let result = match input.validated() {
-            Ok(input) => create_note(input).await,
-            Err(error) => Err(error),
+        let result = match (input.validated(), self.id) {
+            (Ok(input), Some(id)) => update_note(id, input).await,
+            (Ok(input), None) => create_note(input).await,
+            (Err(error), _) => Err(error),
         };
         match result {
             Ok(note) => {
                 self.nav.push(Route::NoteDetail { id: note.id });
             }
-            Err(ApiError::Invalid(errors)) => {
-                self.errors.set(errors);
-                self.failure.set(None);
-                self.saving.set(false);
-            }
             Err(error) => {
-                self.failure.set(Some(error.to_string()));
+                self.errors.set(error.into_field_errors());
                 self.saving.set(false);
             }
         }

@@ -4,7 +4,14 @@ use serde::{Deserialize, Serialize};
 
 use super::{ApiError, FieldErrors};
 #[cfg(feature = "server")]
-use {crate::server::notes, dioxus::server::axum::Extension, sea_orm::DatabaseConnection};
+use {
+    crate::server::{
+        auth::{Auth, require_actor},
+        notes,
+    },
+    dioxus::server::axum::Extension,
+    sea_orm::DatabaseConnection,
+};
 
 pub const TITLE_MAX_CHARS: usize = 200;
 pub const BODY_MAX_CHARS: usize = 10_000;
@@ -59,19 +66,29 @@ impl NoteInput {
     }
 }
 
-#[get("/api/notes?page", db: Extension<DatabaseConnection>)]
+#[get("/api/notes?page", db: Extension<DatabaseConnection>, session: Auth)]
 pub async fn list_notes(page: u64) -> Result<NotePage, ApiError> {
-    Ok(notes::list(&db, page).await?)
+    Ok(notes::list(&db, require_actor(&session)?, page).await?)
 }
 
-#[get("/api/notes/{id}", db: Extension<DatabaseConnection>)]
+#[get("/api/notes/{id}", db: Extension<DatabaseConnection>, session: Auth)]
 pub async fn get_note(id: i64) -> Result<Note, ApiError> {
-    notes::get(&db, id).await
+    notes::get(&db, require_actor(&session)?, id).await
 }
 
-#[post("/api/notes", db: Extension<DatabaseConnection>)]
+#[post("/api/notes", db: Extension<DatabaseConnection>, session: Auth)]
 pub async fn create_note(input: NoteInput) -> Result<Note, ApiError> {
-    notes::create(&db, input).await
+    notes::create(&db, require_actor(&session)?, input).await
+}
+
+#[put("/api/notes/{id}", db: Extension<DatabaseConnection>, session: Auth)]
+pub async fn update_note(id: i64, input: NoteInput) -> Result<Note, ApiError> {
+    notes::update(&db, require_actor(&session)?, id, input).await
+}
+
+#[delete("/api/notes/{id}", db: Extension<DatabaseConnection>, session: Auth)]
+pub async fn delete_note(id: i64) -> Result<(), ApiError> {
+    notes::delete(&db, require_actor(&session)?, id).await
 }
 
 #[cfg(test)]

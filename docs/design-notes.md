@@ -154,3 +154,49 @@ Measured on 2026-10-28, debug build, OrbStack on an arm64 Mac, 11 requests per U
 
 Server rendering cannot know the visitor's time zone, and formatting differently on each side breaks hydration, so dates
 render as `28 Oct 2026` in UTC on both sides (`ui::format::date`).
+
+## Accounts and sessions
+
+| Concern | Decision |
+|---|---|
+| Passwords | Argon2id with the crate defaults, hashed on a blocking thread. 12 to 128 characters |
+| Unknown emails | Sign-in runs a hash check against a decoy hash, so wrong-password and unknown-email answers take the same time and say the same thing. Measured: 334 ms vs 324 ms median (debug build) |
+| Sessions | Server-side rows in Postgres (`axum_session`, table `sessions`); the cookie only holds a random id. HttpOnly, SameSite=Lax, Secure whenever `PUBLIC_URL` is https |
+| Session fixation | `start_session` renews the session id before logging the user in |
+| Sign-out | Removes the user from the session and renews it, so an old cookie gets 401 afterwards (checked with curl) |
+| Duplicate emails | Emails are trimmed and lowercased before saving; the unique index turns a duplicate into a field error |
+| CSRF | `server/origin.rs` rejects any write (anything but GET, HEAD, OPTIONS) whose `Origin` is not `PUBLIC_URL`, on top of SameSite=Lax. A request with no `Origin` is rejected too: security checks fail closed |
+
+Not built yet: sign-in rate limiting, password reset, email verification, "back to the page you wanted" after sign-in.
+
+## One choke point for note access
+
+Every note query starts from `scoped(actor)`, which filters by owner and hides soft-deleted rows. Note functions take an
+`Actor`, which only `server::auth` can create (from the session, or `trusted` for the seed command). Two tests pin it:
+`every_note_read_goes_through_scoped` fails if any other code calls `note::Entity::find()`, and
+`nobody_sees_or_changes_another_users_notes` checks that list, get, update and delete all answer 404 for someone else's
+note.
+
+## Audit trail and soft delete
+
+Every create, update and delete writes an `audit_events` row (actor, action, entity, id, time) in the same transaction as
+the change. Deleting sets `deleted_at` instead of removing the row, so no data is lost; `scoped()` hides those rows.
+
+## Signed-in user without suspending
+
+The layout reads the signed-in user with `use_server_cached(request_user)`: on the server it takes the user the session
+layer already loaded for this request, and the value travels to the browser inside the page. An earlier version fetched
+it with `use_server_future`, which suspended the whole layout and showed the problem below on every page.
+
+## Component stylesheets are linked from the root
+
+`css_module` adds a component's `<link>` from a `static OnceLock` the first time a class is used. In the browser that is
+once per page load, which is fine. On the server it is once per process, so after the first request server-rendered
+pages had no component CSS and painted unstyled until the app loaded. `ui::ComponentStyles` links every component
+stylesheet on every request, using the same `asset!(..., AssetOptions::css_module())` the macro uses, so the URLs match.
+`every_generated_component_stylesheet_is_linked` fails when a newly added component is missing from the list.
+
+## Login redirects are real redirects
+
+`ui::Redirect` answers a server-rendered request with `303 See Other` and a `Location` header, and navigates in the
+browser otherwise, so a signed-out visit to `/notes` never renders the notes layout.

@@ -48,12 +48,12 @@ src/
   main.rs         calls rust_starter::run()
   lib.rs          module tree; serve on the server, launch in the browser
   app.rs          route enum and root component
-  pages/          layout, one file per route, 404
+  pages/          layout, sign-in guard, one file or folder per route, 404
   components/     output of dx components add, left as generated
   ui/             our shared UI built on the stock components
-  hooks/          state and actions for forms
+  hooks/          state and actions: forms, current user, sign-out, delete
   api/            shared types, validation and server functions (bodies run on the server only)
-  server/         server only: config, database, entities, migrations, queries, auth
+  server/         server only: config, database, entities, migrations, queries, auth, audit, origin check
   bin/seed.rs     fills the database with generated notes
 compose.yaml      app + db
 Dockerfile        dev and prod stages
