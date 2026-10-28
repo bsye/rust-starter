@@ -43,3 +43,31 @@ flowchart LR
 | Associated functions | `FullstackContext::commit_http_status` in `src/pages/not_found.rs:15` | A function on a type with no `self`, called with `Type::function`; on the server it sets the response to 404, in the browser it does nothing | [ch05-03](https://doc.rust-lang.org/book/ch05-03-method-syntax.html) |
 | `Option` | `None` in `src/pages/not_found.rs:15` | Rust has no null: an optional value is `Some(value)` or `None` | [ch06-01](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) |
 | Unit tests | `src/app.rs:28-45` | `#[cfg(test)]` compiles the module only for `cargo test`; `use super::Route` reaches the parent module; `unwrap()` panics on an error, which fails the test | [ch11-01](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) |
+
+## Phase 3: database
+
+How one request for a page of notes flows:
+
+```mermaid
+flowchart LR
+  P[pages/notes/list.rs] -- "list_notes(page)" --> A[api/notes.rs server function]
+  A -- "HTTP GET /api/notes?page=2 (browser) or a direct call (server rendering)" --> S[server/notes.rs]
+  S -- SeaORM --> D[(Postgres)]
+```
+
+| Concept | Where | In one line | Read |
+|---|---|---|---|
+| `?` operator | `src/api/notes.rs:57`, `src/server/notes.rs` | Returns early with the error if a `Result` is `Err`, otherwise unwraps the value; it converts the error with `From` on the way out | [ch09-02](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html) |
+| `From` for errors | `src/api/error.rs:37`, `:54` | `impl From<DbErr> for ApiError` is what lets `?` turn a database error into the API error (and log it) | [ch10-02](https://doc.rust-lang.org/book/ch10-02-traits.html) |
+| Enums as error types | `ApiError` in `src/api/error.rs:28` | One enum lists every way a call can fail; `thiserror` writes the messages, `match` handles each case | [ch06-01](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) |
+| `Option` methods | `.map(Note::from).ok_or(ApiError::NotFound)` in `src/server/notes.rs:38-44` | Transform the value if present, or turn "nothing" into an error, without an `if` | [ch06-02](https://doc.rust-lang.org/book/ch06-02-match.html) |
+| `async` and `.await` | `src/server/notes.rs:23` | Database calls return futures; `.await` pauses this function, not the whole server, until the answer arrives | [ch17](https://doc.rust-lang.org/book/ch17-00-async-await.html) |
+| Associated consts | `NoteInput::TITLE` in `src/api/notes.rs:36` | A constant that belongs to a type; the form and the validator use the same field name | [Reference](https://doc.rust-lang.org/reference/items/associated-items.html#associated-constants) |
+| Closures | `from_lookup(\|name\| ...)` in `src/server/config.rs:13-14` | An inline function that can capture variables; tests pass a fake lookup instead of touching real environment variables | [ch13-01](https://doc.rust-lang.org/book/ch13-01-closures.html) |
+| `impl Trait` arguments | `lookup: impl Fn(&str) -> Option<String>` in `src/server/config.rs:13` | "Any type that implements this trait": here, any function with that shape | [ch10-02](https://doc.rust-lang.org/book/ch10-02-traits.html) |
+| Iterators | `.map(\|n\| ...)` in `src/server/seed.rs:13`, `.into_iter().map(Note::from).collect()` in `src/server/notes.rs` | Lazy chains that build values one at a time; `collect` gathers them into a `Vec` | [ch13-02](https://doc.rust-lang.org/book/ch13-02-iterators.html) |
+| `impl From<A> for B` | `src/server/notes.rs:11` | The conversion from the database row (server only) to the shared `Note` (both sides) lives in the server module | [ch10-02](https://doc.rust-lang.org/book/ch10-02-traits.html) |
+| Structs of signals | `NoteForm` in `src/hooks/note_form.rs:8` | `Signal` is `Copy`, so the whole struct is too. A field holding a signal is read with `.cloned()`: `form.title()` would look for a method called `title` | [ch05-01](https://doc.rust-lang.org/book/ch05-01-defining-structs.html) |
+| Reactive props | `page: ReadSignal<u64>` in `src/pages/notes/list.rs:11` | A plain `u64` prop would be read once; a `ReadSignal` makes `use_server_future` run again when the page number changes | [Dioxus props](https://dioxuslabs.com/learn/0.7/essentials/ui/components/) |
+| `matches!` | `src/app.rs:25` | `true` if a value fits a pattern; `{ .. }` ignores the fields | [Reference](https://doc.rust-lang.org/std/macro.matches.html) |
+| Async tests | `#[sqlx::test]` in `src/server/notes.rs`, `tokio::join!` in `src/server/db.rs:33` | Each test gets its own empty database; `join!` runs two futures at the same time | [ch11-01](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) |

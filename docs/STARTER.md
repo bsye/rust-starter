@@ -51,8 +51,10 @@ src/
   pages/          layout, one file per route, 404
   components/     output of dx components add, left as generated
   ui/             our shared UI built on the stock components
-  api/            server functions (compiled into both sides, bodies run on the server only)
-  server/         server only: config, database, entities, migrations, auth
+  hooks/          state and actions for forms
+  api/            shared types, validation and server functions (bodies run on the server only)
+  server/         server only: config, database, entities, migrations, queries, auth
+  bin/seed.rs     fills the database with generated notes
 compose.yaml      app + db
 Dockerfile        dev and prod stages
 .devcontainer/    VS Code attaches to the app service

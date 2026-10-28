@@ -5,6 +5,7 @@
   --color-foreground: var(--secondary-color-4);
   --color-muted: var(--secondary-color-5);
   --color-border: var(--primary-color-6);
+  --color-destructive: var(--primary-error-color);
 }
 
 @layer base {

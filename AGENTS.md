@@ -175,7 +175,8 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 
 ## This project
 
-- Tailwind classes go on wrapper elements, never on `src/components/` components: their unlayered CSS beats Tailwind's
-  layered utilities.
-- `src/components/` is `dx components add` output; leave it as generated and put shared UI in `src/ui/`.
+- Never use Tailwind to override a property a `src/components/` component sets: its unlayered CSS beats Tailwind's
+  layered utilities. Wrap it instead.
+- `src/components/` is `dx components add` output; leave it as generated (patches are listed in
+  `docs/design-notes.md`) and put shared UI in `src/ui/`.
 - Every cargo and dx command runs inside the `app` container (`docker compose exec app ...`).

@@ -3,14 +3,29 @@ name = "rust-starter"
 version = "0.1.0"
 edition = "2024"
 publish = false
+default-run = "rust-starter"
+
+[[bin]]
+name = "seed"
+required-features = ["server"]
 
 [dependencies]
 dioxus = { version = "0.7.10", features = ["router", "fullstack"] }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", default-features = false, version = "0.0.1" }
+dioxus-icons = { version = "0.1.0", default-features = false }
+serde = { version = "1.0.229", features = ["derive"] }
+chrono = { version = "0.4.45", features = ["serde"] }
+thiserror = "2.0.21"
+num-format = "0.4.4"
 anyhow = { version = "1.0.104", optional = true }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", rev = "9a758255ea26e2b20c8cecf4c1c946feb9e71da7", default-features = false }
-dioxus-free-icons = { version = "0.10.0", features = ["lucide"] }
+sea-orm = { version = "2.0.4", default-features = false, features = ["macros", "runtime-tokio-rustls", "sqlx-postgres", "with-chrono"], optional = true }
+sea-orm-migration = { version = "2.0.4", default-features = false, features = ["runtime-tokio-rustls", "sqlx-postgres", "with-chrono"], optional = true }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"], optional = true }
+
+[dev-dependencies]
+sqlx = { version = "0.9.0", default-features = false, features = ["postgres", "runtime-tokio", "macros", "migrate"] }
 
 [features]
 default = ["web"]
 web = ["dioxus/web"]
-server = ["dioxus/server", "dep:anyhow"]
+server = ["dioxus/server", "dep:anyhow", "dep:sea-orm", "dep:sea-orm-migration", "dep:tokio"]

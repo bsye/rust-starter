@@ -5,5 +5,5 @@ mod shell;
 
 pub use home::Home;
 pub use not_found::NotFound;
-pub use notes::Notes;
+pub use notes::{NewNote, NoteDetail, Notes};
 pub use shell::Shell;

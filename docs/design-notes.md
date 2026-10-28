@@ -66,22 +66,26 @@ git.
 `src/components/` and themes them through `assets/dx-components-theme.css`. That is the stock-component route for
 Dioxus.
 
-- **Left as generated.** `src/components/` is `dx` output, so `dx components update` can refresh it. Our own shared UI
-  lives in `src/ui/`. The `dioxus-primitives` git dependency is pinned to a commit because the crate is not published.
+- **Left as generated, with one patch.** `src/components/` is `dx` output, so `dx components update` can refresh it.
+  Our own shared UI lives in `src/ui/`. `dx components add` rewrites the `dioxus-primitives` git line, so the commit pin
+  lives in `Cargo.lock`. One patch: the generated `Textarea` rendered `{children}` inside `<textarea>`; empty children
+  server-render as `<!--placeholder-->`, which a textarea shows as text. We removed `children` from our copy (upstream
+  main still has it). Re-apply this after any `dx components update`.
 - **Library crate.** Unused variants in the generated components (`ButtonVariant::Ghost`, ...) failed clippy's dead-code
   check. Moving the module tree into `src/lib.rs` with `pub mod components` makes them public API instead of dead code,
   with no lint suppressions. Our own modules stay private, so dead code there is still caught.
-- **Tailwind on wrappers only.** Tailwind v4 puts utilities in `@layer utilities`, and the components' CSS is unlayered,
-  so the component CSS always wins. Classes go on a wrapper element, never on a stock component.
+- **Tailwind never overrides component CSS.** Tailwind v4 puts utilities in `@layer utilities`, and the components' CSS
+  is unlayered, so the component CSS always wins. To change a property a component sets, wrap it. Properties the
+  component leaves open (a skeleton's size) can take Tailwind classes directly.
 - **Theme tokens into Tailwind.** `tailwind.css` maps the components' theme variables to Tailwind colours
   (`bg-background`, `text-muted`, `border-border`) with `@theme inline`, so pages use the same tokens as the components
   and follow the system light or dark setting.
 - **Button-styled links.** `ui::ButtonLink` applies the button's own `style.css` through `css_module` to a router
   `Link`, so navigation stays a real link (new tab, middle click) and looks like the stock button.
-- **Active nav.** The router sets `aria-current="page"` on the active link; the nav styles it with
-  `aria-[current=page]:`. The router's `active_class` added a second colour class that lost to `text-muted`.
-- **Icons.** [dioxus-free-icons](https://github.com/dioxus-community/dioxus-free-icons) 0.10 with the Lucide set, the
-  icon family shadcn uses.
+- **Active nav.** `Route::in_notes()` marks the whole notes section (list, any page, detail, new) with `data-active`.
+  The router's own `aria-current` only matches the exact URL, so it went dark on `/notes?page=2` and `/notes/7`.
+- **Icons.** [dioxus-icons](https://github.com/dioxuslabs/dioxus-icons) (Lucide, the icon family shadcn uses). The
+  generated pagination already depends on it, so it replaced `dioxus-free-icons` to keep one icon set.
 
 ## 404 status
 
@@ -105,3 +109,48 @@ with `dioxus-ssr` 0.7.10.
 Follows the [Dioxus deploy tutorial](https://dioxuslabs.com/learn/0.7/tutorial/deploy): cargo-chef for dependency
 caching, `dx bundle --web --release`, then copy `target/dx/<app>/release/web/` into a slim runtime with `IP` and `PORT`
 set.
+
+## Server functions are thin
+
+`api/` holds what both sides share: the `Note` and `NotePage` structs, `NoteInput` with its validation, and the server
+functions. Each server function only pulls the database out of the request (`Extension<DatabaseConnection>`, added as a
+router layer) and calls a plain `async fn` in `server/notes.rs`. Tests call those functions directly with a fresh
+database, without HTTP.
+
+## One error type for every call
+
+`ApiError` (`Invalid(FieldErrors)`, `NotFound`, `Server`) is serialisable, so the browser gets the same enum the server
+returned, with the status code from `AsStatusCode` (422, 404, 500). Database errors are logged on the server and reach
+the browser only as "Something went wrong", never with SQL details.
+
+## Validation runs on both sides
+
+`NoteInput::validated` is shared code. The form runs it before sending, for instant field errors, and the server runs it
+again because the server is the authority (`POST /api/notes` with a blank title returns 422).
+
+## Migrations take a lock
+
+SeaORM's migrator takes no lock, so two app copies starting together could both migrate. `db::migrate` runs every
+pending migration inside one transaction holding `pg_advisory_xact_lock`. The test `concurrent_migrations_both_succeed`
+starts two migrations at once: it failed 3 of 3 runs with the lock removed and passed 3 of 3 with it.
+
+## Pagination by page number
+
+Offset pagination with a total count, because the UI shows "Page 3 of 500" and the stock pagination component is page
+based. With 10,000 notes it is well inside budget (below). Keyset pagination would scale past millions of rows but
+cannot jump to a page number; revisit if a list grows that large.
+
+Measured on 2026-10-28, debug build, OrbStack on an arm64 Mac, 11 requests per URL:
+
+| URL | Median | Max |
+|---|---|---|
+| `/notes` (server rendered) | 14.0 ms | 23.9 ms |
+| `/notes?page=250` | 13.3 ms | 17.8 ms |
+| `/notes?page=500` (last) | 16.6 ms | 23.4 ms |
+| `/api/notes?page=1` | 5.3 ms | 9.0 ms |
+| `/api/notes?page=500` | 5.3 ms | 6.6 ms |
+
+## Dates are shown in UTC
+
+Server rendering cannot know the visitor's time zone, and formatting differently on each side breaks hydration, so dates
+render as `28 Oct 2026` in UTC on both sides (`ui::format::date`).

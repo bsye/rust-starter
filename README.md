@@ -10,7 +10,13 @@ Needs Docker only.
 2. Open [localhost:8090](http://localhost:8090). The first build takes a few minutes; later edits hot reload.
 3. In VS Code, run **Dev Containers: Reopen in Container** to get rust-analyzer inside the `app` container.
 
-Checks (format, clippy for server and browser, tests):
+Fill the database with 10,000 generated notes:
+
+```sh
+docker compose exec app cargo run --bin seed --no-default-features --features server -- 10000
+```
+
+Checks (format, clippy for server and browser, tests; needs the stack running for the database tests):
 
 ```sh
 docker compose exec app ./scripts/check.sh

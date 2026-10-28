@@ -5,6 +5,11 @@ services:
       target: dev
     ports:
       - "8090:8080"
+    environment:
+      DATABASE_URL: postgres://postgres@db:5432/app
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - .:/app
       - target:/app/target
@@ -12,8 +17,22 @@ services:
       - cargo-git:/usr/local/cargo/git
       - dx-tools:/root/.local/share/.dx
 
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
 volumes:
   target:
   cargo-registry:
   cargo-git:
   dx-tools:
+  db-data:
