@@ -4,7 +4,7 @@ WORKDIR /app
 
 FROM base AS dev
 EXPOSE 3000
-CMD ["sh", "-c", "npm install --no-fund --no-audit && npm run dev -- --host 0.0.0.0"]
+CMD ["sh", "-c", "sha256sum -c node_modules/.lock.sha256 >/dev/null 2>&1 || (npm install --no-fund --no-audit && sha256sum package-lock.json > node_modules/.lock.sha256); exec npm run dev -- --host 0.0.0.0"]
 
 FROM base AS builder
 COPY package.json package-lock.json ./
