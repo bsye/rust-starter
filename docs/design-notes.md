@@ -216,3 +216,20 @@ stylesheet on every request, using the same `asset!(..., AssetOptions::css_modul
 
 `ui::Redirect` answers a server-rendered request with `303 See Other` and a `Location` header, and navigates in the
 browser otherwise, so a signed-out visit to `/notes` never renders the notes layout.
+
+## Benchmark fairness
+
+Plan in [BENCHMARK.md](BENCHMARK.md); numbers in [bench/REPORT.md](../bench/REPORT.md).
+
+| Decision | Why |
+|---|---|
+| Each app written the idiomatic way | It is what you would ship. The biggest difference: nuxt-auth-utils keeps the session sealed in the cookie, so sign-out cannot revoke an old cookie (the parity check shows it) and pages skip a session lookup in the database |
+| Nuxt runs Nitro's `node_cluster` preset with 2 workers | Both containers get 2 CPUs; a single Node process would use one. Nitro documents the preset for multi-core use |
+| Nuxt builds with `compressPublicAssets`, Rust with `pre_compress` | Both serve pre-compressed static assets, as a production deployment should |
+| Lighthouse loads `localhost` on the host network | Chrome only offers brotli to secure origins; over `http://rust:8080` it fetched the 3.2 MB wasm uncompressed, over localhost 646 KB, which is what users get over https |
+| Seed data inserted with the same SQL for both | Identical rows, independent of each app's seed tool |
+| Load: closed loop for throughput, fixed 50 req/s for latency | Closed-loop latency hides queueing (coordinated omission); oha's `--latency-correction` only applies to a fixed rate. 50 req/s sits below both apps' capacity; a first run at 200 req/s overloaded Nuxt's server rendering (about 110 pages/s), so it measured a queue, not latency |
+| Cold image builds use a fresh `buildx` builder with base images pulled first | Empties cache mounts without touching other projects' Docker caches, and keeps download time of base images out of the build time |
+| Nuxt dev container reinstalls dependencies only when the lockfile changes | Running `npm install` on every start made restarts 35 s; that measured the Dockerfile, not Nuxt |
+| Generated code counted apart | shadcn-vue and dioxus-components output, Drizzle's generated migrations and both theme stylesheets are not hand-written |
+| Two warm-ups | 5 s before each load run; one unmeasured check run before timing checks. A cold JIT made Nuxt look half as fast in a first probe |

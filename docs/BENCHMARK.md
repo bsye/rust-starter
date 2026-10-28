@@ -82,13 +82,19 @@ Both production containers run with the same limits (2 CPUs, 1 GB).
   not remove.
 - **Same author for both apps.** The Nuxt app follows the official Nuxt, Drizzle and nuxt-auth-utils docs to limit bias.
 
-## Open questions
+## Decisions
 
-1. **Baseline stack.** (a) the common defaults above (recommended unless your team has a standard); (b) your team's
-   usual Nuxt stack, if it differs.
-2. **Parity level.** (a) each app written the idiomatic way, differences documented (recommended: it is what you would
-   ship); (b) force identical architecture, for example Postgres sessions in Nuxt too.
-3. **Where.** (a) `bench/` in this repo on the `benchmark` branch (recommended); (b) a separate repo.
-4. **Languages.** The Nuxt app and the Playwright and Lighthouse scripts are TypeScript, plus shell for the runner. OK?
-5. **"Speed of developing".** The plan measures the feedback loop and code size. How long a human takes to build a
-   feature cannot be measured fairly, so it is left out. OK?
+All five open questions were answered with the recommended option: common Nuxt defaults, idiomatic apps, `bench/` in
+this repo, TypeScript and JavaScript for the Nuxt app and harness, and no attempt to time humans.
+
+## Running it
+
+Needs Docker and Node 20 or newer.
+
+```sh
+node bench/run.mjs            # everything, about 75 minutes
+node bench/run.mjs production # one part: features, production or devloop
+```
+
+Results land in `bench/results/<date>/` (not committed) and the report in `bench/REPORT.md`. `BENCH_RUNS` changes the
+number of repetitions (default 3).

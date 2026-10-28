@@ -8,7 +8,8 @@ const NOTES = 10_000
 const WARMUP = '5s'
 const DURATION = '20s'
 const CONNECTIONS = 50
-const FIXED_RATE = 200
+const FIXED_RATE = 50
+const IDLE_SAMPLES = 5
 const BENCH_EMAIL = 'bench@example.com'
 
 const compose = (...args) => docker(...COMPOSE, ...args)
@@ -99,8 +100,12 @@ export async function production() {
   for (const app of apps) {
     const result = results[app]
     result.imageBytes = Number(docker('image', 'inspect', '--format', '{{.Size}}', `${app}-starter:prod`))
-    await sleep(5000)
-    result.idleMemoryMiB = await memoryMiB(container(app))
+    await sleep(10_000)
+    result.idleMemoryMiB = []
+    for (let sample = 0; sample < IDLE_SAMPLES; sample++) {
+      result.idleMemoryMiB.push(await memoryMiB(container(app)))
+      await sleep(1000)
+    }
     const { password, cookie, noteId } = await prepare(app)
     log(`parity ${app}`)
     result.parity = await parity(APPS[app])

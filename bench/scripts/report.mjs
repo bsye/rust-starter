@@ -72,8 +72,8 @@ function productionSection({ rust, nuxt }) {
   const load = (app, path, mode, key) => app.load[path].map(run => run[mode][key])
   const throughputRows = paths.map(path => row(`\`${path}\` requests/s`, load(rust, path, 'throughput', 'rps'), load(nuxt, path, 'throughput', 'rps'), number.format, true))
   const latencyRows = paths.flatMap(path => [
-    row(`\`${path}\` p50 at 200 req/s`, load(rust, path, 'fixedRate', 'p50'), load(nuxt, path, 'fixedRate', 'p50'), millis),
-    row(`\`${path}\` p99 at 200 req/s`, load(rust, path, 'fixedRate', 'p99'), load(nuxt, path, 'fixedRate', 'p99'), millis),
+    row(`\`${path}\` p50 at 50 req/s`, load(rust, path, 'fixedRate', 'p50'), load(nuxt, path, 'fixedRate', 'p50'), millis),
+    row(`\`${path}\` p99 at 50 req/s`, load(rust, path, 'fixedRate', 'p99'), load(nuxt, path, 'fixedRate', 'p99'), millis),
   ])
   const peak = app => paths.flatMap(path => app.load[path].map(run => run.peakMemoryMiB))
   const lighthouse = (app, page, key) => app.lighthouse[page].map(run => run[key])
@@ -88,7 +88,7 @@ function productionSection({ rust, nuxt }) {
 ${table([
   row('Image size', [rust.imageBytes], [nuxt.imageBytes], bytes),
   row('Cold start to healthy (incl. migrations)', rust.coldStartMs, nuxt.coldStartMs, millis),
-  row('Memory, idle', [rust.idleMemoryMiB], [nuxt.idleMemoryMiB], mib),
+  row('Memory, idle', rust.idleMemoryMiB, nuxt.idleMemoryMiB, mib),
   row('Memory, peak under load', peak(rust), peak(nuxt), mib),
   row('Sign-in p50 (password hashing)', rust.signIn.map(run => run.p50), nuxt.signIn.map(run => run.p50), millis),
 ])}
@@ -97,7 +97,7 @@ ${table([
 
 ${table(throughputRows, 'Endpoint')}
 
-### Latency at a fixed 200 requests/s (latency corrected)
+### Latency at a fixed 50 requests/s (latency corrected, below both apps' capacity)
 
 ${table(latencyRows, 'Endpoint')}
 
