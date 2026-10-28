@@ -10,7 +10,7 @@ FROM base AS builder
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-fund --no-audit --ignore-scripts
 COPY . .
-RUN npm run build
+RUN NITRO_PRESET=node_cluster npm run build
 
 FROM node:${NODE_VERSION}-trixie-slim AS prod
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080 NUXT_MIGRATIONS_DIR=/app/migrations

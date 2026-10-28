@@ -15,6 +15,9 @@ export default defineNuxtConfig({
   app: {
     head: { title: 'Nuxt starter' },
   },
+  nitro: {
+    compressPublicAssets: true,
+  },
   runtimeConfig: {
     databaseUrl: '',
     siteOrigin: '',
