@@ -63,7 +63,36 @@ git.
 ## Components through dx components add
 
 [dioxus-components](https://github.com/DioxusLabs/dioxus-components) copies shadcn-style components into
-`src/components/` and themes them through `assets/dx-components.css`. That is the stock-component route for Dioxus.
+`src/components/` and themes them through `assets/dx-components-theme.css`. That is the stock-component route for
+Dioxus.
+
+- **Left as generated.** `src/components/` is `dx` output, so `dx components update` can refresh it. Our own shared UI
+  lives in `src/ui/`. The `dioxus-primitives` git dependency is pinned to a commit because the crate is not published.
+- **Library crate.** Unused variants in the generated components (`ButtonVariant::Ghost`, ...) failed clippy's dead-code
+  check. Moving the module tree into `src/lib.rs` with `pub mod components` makes them public API instead of dead code,
+  with no lint suppressions. Our own modules stay private, so dead code there is still caught.
+- **Tailwind on wrappers only.** Tailwind v4 puts utilities in `@layer utilities`, and the components' CSS is unlayered,
+  so the component CSS always wins. Classes go on a wrapper element, never on a stock component.
+- **Theme tokens into Tailwind.** `tailwind.css` maps the components' theme variables to Tailwind colours
+  (`bg-background`, `text-muted`, `border-border`) with `@theme inline`, so pages use the same tokens as the components
+  and follow the system light or dark setting.
+- **Button-styled links.** `ui::ButtonLink` applies the button's own `style.css` through `css_module` to a router
+  `Link`, so navigation stays a real link (new tab, middle click) and looks like the stock button.
+- **Active nav.** The router sets `aria-current="page"` on the active link; the nav styles it with
+  `aria-[current=page]:`. The router's `active_class` added a second colour class that lost to `text-muted`.
+- **Icons.** [dioxus-free-icons](https://github.com/dioxus-community/dioxus-free-icons) 0.10 with the Lucide set, the
+  icon family shadcn uses.
+
+## 404 status
+
+The catch-all route renders the not-found page and calls `FullstackContext::commit_http_status(NOT_FOUND)`, so server
+rendering answers with a real 404 instead of a 200 page that says "not found".
+
+## Tailwind binary baked into the image
+
+On a fresh tools volume, `dx serve` downloads Tailwind and then fails to start its watcher, so the first run had no CSS
+until a restart. The dev image now downloads the exact binary `dx` 0.7.10 expects (`TAILWIND_VERSION=4.1.5`) to its
+tools folder, and the named volume is seeded from the image. Bump `TAILWIND_VERSION` with `DIOXUS_CLI_VERSION`.
 
 ## Tests without a Dioxus test runner
 

@@ -45,10 +45,12 @@ Dioxus.toml
 tailwind.css
 assets/
 src/
-  main.rs         dioxus::serve on the server, dioxus::launch in the browser
-  app.rs          route enum and layout
-  pages/          one file per route
-  components/     output of dx components add, plus shared UI
+  main.rs         calls rust_starter::run()
+  lib.rs          module tree; serve on the server, launch in the browser
+  app.rs          route enum and root component
+  pages/          layout, one file per route, 404
+  components/     output of dx components add, left as generated
+  ui/             our shared UI built on the stock components
   api/            server functions (compiled into both sides, bodies run on the server only)
   server/         server only: config, database, entities, migrations, auth
 compose.yaml      app + db

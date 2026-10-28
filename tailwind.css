@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--primary-color);
+  --color-foreground: var(--secondary-color-4);
+  --color-muted: var(--secondary-color-5);
+  --color-border: var(--primary-color-6);
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+  }
+}

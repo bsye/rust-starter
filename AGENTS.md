@@ -172,3 +172,10 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 - **Say exactly what changed** (files, branch, PR) and how I can verify it. Recaps cover every change in the thread,
   not just the last one.
 - **Numbered steps** for anything I have to do myself.
+
+## This project
+
+- Tailwind classes go on wrapper elements, never on `src/components/` components: their unlayered CSS beats Tailwind's
+  layered utilities.
+- `src/components/` is `dx components add` output; leave it as generated and put shared UI in `src/ui/`.
+- Every cargo and dx command runs inside the `app` container (`docker compose exec app ...`).
