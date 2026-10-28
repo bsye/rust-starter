@@ -1,7 +1,9 @@
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { BENCH_DIR, REPO_DIR, RUNS, TOOLS_IMAGE, docker, log, sh, sleep, timed, waitForHttp } from './lib.mjs'
 
-const WORK_DIR = `${BENCH_DIR}/.work`
+const WORK_DIR = mkdtempSync(join(tmpdir(), 'rust-starter-bench-'))
 const HMR_RUNS = 10
 const BUILDER = 'bench-builder'
 

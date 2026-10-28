@@ -10,7 +10,10 @@ if (!original.includes(label)) {
 
 const browser = await chromium.launch()
 const page = await browser.newPage()
+const hotReloadSocket = page.waitForEvent('websocket', { timeout: 600_000 })
 await page.goto(url)
+await hotReloadSocket
+await page.waitForLoadState('networkidle')
 await page.waitForFunction(text => document.body.innerText.includes(text), label, { timeout: 600_000 })
 await page.evaluate(() => { window.__benchMarker = true })
 
