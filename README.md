@@ -1,7 +1,7 @@
 # Rust starter
 
-A containerised Dioxus fullstack scaffold for web apps: Rust on the server and in the browser, Postgres, accounts, and a
-production image.
+A containerised Dioxus fullstack scaffold for web apps: Rust on the server and in the browser, Postgres, accounts and a
+production image. Built in phases while learning Rust, then benchmarked against the same app written in Nuxt.
 
 ![Notes list](docs/screenshots/notes.jpg)
 
@@ -26,29 +26,29 @@ Checks (format, clippy for server and browser, tests; the database tests need th
 docker compose exec app ./scripts/check.sh
 ```
 
-## Production image
+Production image:
 
 ```sh
 docker build --target prod -t rust-starter .
 docker run -p 8080:8080 -e DATABASE_URL=postgres://... -e PUBLIC_URL=https://your.domain rust-starter
 ```
 
-Measured on 2026-10-28 on an arm64 Mac (OrbStack), release build, 10,000 notes in one account, 21 requests per page:
+## What we built
 
-| What | Result |
+| Step | Result |
 |---|---|
-| Image size | 147 MB (`debian:trixie-slim`, 24 MB server binary, 3.2 MB of browser assets) |
-| Cold start to healthy | 574 ms, including migrations on an empty database |
-| Memory | 26 to 36 MiB (two runs, idle and after the load test) |
-| Browser download of the app | 646 KB wasm (brotli), 3.2 MB unpacked |
-| Notes list, server rendered | 4.1 ms median, 9.3 ms p95 |
-| Page 250 of 500 | 9.1 ms median, 14.9 ms p95 |
-| `GET /api/notes` | 3.9 ms median, 8.5 ms p95 |
-| Sign-in (Argon2id) | 67 ms median |
-| Image build | 249 s cold, 31 s after a source change |
+| Research | Compared Rust options with a Nuxt or Next feel (Leptos, Dioxus, Topcoat, Loco, Tuono, rari) and picked Dioxus 0.7 |
+| [Plan](docs/STARTER.md) | Five phases with acceptance criteria, written before any code |
+| 1. Container | Docker dev setup with hot reload, a VS Code dev container and a check script; nothing but Docker on the host |
+| 2. Routing | Route enum, shared layout, real 404 status, stock shadcn-style components, light and dark theme |
+| 3. Database | Postgres with SeaORM, migrations behind an advisory lock, paginated notes with totals, validated forms |
+| 4. Auth | Accounts with Argon2id, server-side sessions, an origin check, owner-scoped queries, soft delete and an audit trail |
+| 5. Production | Slim non-root image with pre-compressed assets and a healthcheck |
+| [Benchmark](bench/REPORT.md) | The same app built the idiomatic Nuxt way in [`bench/nuxt`](bench/nuxt), measured on features, the developer loop and production by one script ([method](docs/BENCHMARK.md)) |
 
-Built and run on arm64 only. Most hosts need `docker buildx build --platform linux/amd64 --target prod .`, which has not
-been run here.
+Learning Rust was part of the goal: [docs/rust-notes.md](docs/rust-notes.md) maps every Rust concept each phase used to
+the file and line where it appears. Decisions, measurements and the three upstream Dioxus bugs we worked around are in
+[docs/design-notes.md](docs/design-notes.md).
 
 ## Tour
 
@@ -61,3 +61,4 @@ been run here.
 - [Plan](docs/STARTER.md)
 - [Design notes](docs/design-notes.md)
 - [Rust notes](docs/rust-notes.md)
+- [Benchmark plan](docs/BENCHMARK.md) and [report](bench/REPORT.md)

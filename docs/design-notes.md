@@ -223,7 +223,7 @@ Plan in [BENCHMARK.md](BENCHMARK.md); numbers in [bench/REPORT.md](../bench/REPO
 
 | Decision | Why |
 |---|---|
-| Each app written the idiomatic way | It is what you would ship. The biggest difference: nuxt-auth-utils keeps the session sealed in the cookie, so sign-out cannot revoke an old cookie (the parity check shows it) and pages skip a session lookup in the database |
+| Each app written the idiomatic way | It is what you would ship. The biggest difference: nuxt-auth-utils keeps the session sealed in the cookie, so sign-out cannot revoke an old cookie (the parity check shows it). The Rust starter stores sessions in Postgres behind an in-memory cache; a statement log showed no session query on a normal page request, so neither app pays a database round trip for the session |
 | Nuxt runs Nitro's `node_cluster` preset with 2 workers | Both containers get 2 CPUs; a single Node process would use one. Nitro documents the preset for multi-core use |
 | Nuxt builds with `compressPublicAssets`, Rust with `pre_compress` | Both serve pre-compressed static assets, as a production deployment should |
 | Lighthouse loads `localhost` on the host network | Chrome only offers brotli to secure origins; over `http://rust:8080` it fetched the 3.2 MB wasm uncompressed, over localhost 646 KB, which is what users get over https |
@@ -233,3 +233,12 @@ Plan in [BENCHMARK.md](BENCHMARK.md); numbers in [bench/REPORT.md](../bench/REPO
 | Nuxt dev container reinstalls dependencies only when the lockfile changes | Running `npm install` on every start made restarts 35 s; that measured the Dockerfile, not Nuxt |
 | Generated code counted apart | shadcn-vue and dioxus-components output, Drizzle's generated migrations and both theme stylesheets are not hand-written |
 | Two warm-ups | 5 s before each load run; one unmeasured check run before timing checks. A cold JIT made Nuxt look half as fast in a first probe |
+| Apps alternate within every metric | The first developer-loop pass ran all Rust metrics, then all Nuxt metrics. Re-measured on its own, Nuxt's first run, restart and checks were roughly twice as fast as in that pass, which ran after an hour of Rust compiling. Both parts of the harness now alternate the apps run by run |
+
+### Why the Rust list page is slower than its API
+
+The Rust list page serves about a third of the requests per second of the JSON API behind it, while the detail page
+serves more than the API. A Postgres statement log shows the list page runs the same two queries as the API (count, then
+page), with no duplicate calls, so the difference is Dioxus rendering 20 cards and serialising the hydration data. The
+Rust paginator also runs the count and the page one after the other; the Nuxt version runs them in parallel with
+`Promise.all`, which shows in the JSON API latency at low load.
