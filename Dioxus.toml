@@ -1,4 +1,7 @@
 [application]
 
+[web]
+pre_compress = true
+
 [web.app]
 title = "Rust starter"

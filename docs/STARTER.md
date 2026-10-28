@@ -80,7 +80,7 @@ in `docs/rust-notes.md`.
 | 2 | Routing and layout | Route enum, shared layout, 404 page, first stock components, light and dark theme | enums, `derive`, structs, component props, ownership and borrowing, `String` vs `&str` |
 | 3 | Database | Config from env, pool, migrations at startup, notes list (paginated, with total) and detail and create form | `Result`, `?`, `Option`, error enums, `async`/`await`, traits (`Serialize`, `FromRow`) |
 | 4 | Auth | Sign up, sign in, sign out, sessions in Postgres, protected pages, reads scoped to the user, edit and delete notes, who and when on every change | `Arc`, `Clone`, lifetimes (basics), Axum extractors, middleware, generics |
-| 5 | Production image | Multi-stage Dockerfile (cargo-chef, `dx bundle`, slim runtime, non-root), measured size and start time | release profile, build caching, linking |
+| 5 | Production image | Multi-stage Dockerfile (`dx bundle` with BuildKit cache mounts, slim runtime, non-root), measured size and start time | release profile, build caching, linking |
 
 ### Acceptance criteria
 
@@ -121,7 +121,8 @@ in `docs/rust-notes.md`.
 - Pages past the last one return an empty page with the real total, never an error.
 - Two app replicas starting at once must not run migrations twice (verify SeaORM's migrator behaviour in phase 3).
 - Session cookies: `Secure` and `HttpOnly` in prod, relaxed only for `localhost` in dev.
-- Mac builds are arm64; the prod image needs an amd64 build for most hosts.
+- Mac builds are arm64; the prod image needs an amd64 build for most hosts (`docker buildx build --platform linux/amd64`,
+  not run yet).
 
 ## Decisions
 

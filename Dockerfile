@@ -18,3 +18,23 @@ WORKDIR /app
 FROM base AS dev
 EXPOSE 8080
 CMD ["dx", "serve", "--addr", "0.0.0.0", "--port", "8080"]
+
+FROM base AS builder
+COPY . .
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    dx bundle --web --release \
+    && cp -r target/dx/rust-starter/release/web /out
+
+FROM debian:trixie-slim AS prod
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 --no-create-home app
+COPY --from=builder /out/ /usr/local/app
+ENV IP=0.0.0.0 PORT=8080
+EXPOSE 8080
+USER app
+WORKDIR /usr/local/app
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s CMD curl -fsS http://127.0.0.1:8080/health || exit 1
+ENTRYPOINT ["/usr/local/app/server"]

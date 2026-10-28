@@ -106,9 +106,25 @@ with `dioxus-ssr` 0.7.10.
 
 ## Production image
 
-Follows the [Dioxus deploy tutorial](https://dioxuslabs.com/learn/0.7/tutorial/deploy): cargo-chef for dependency
-caching, `dx bundle --web --release`, then copy `target/dx/<app>/release/web/` into a slim runtime with `IP` and `PORT`
-set.
+Based on the [Dioxus deploy tutorial](https://dioxuslabs.com/learn/0.7/tutorial/deploy), with three changes:
+
+- **Cache mounts instead of cargo-chef.** The tutorial cooks dependencies with `cargo chef cook --release`. `dx bundle`
+  builds with its own profiles (`wasm-release`, `server-release`) and extra compiler flags, so the cooked artifacts never
+  matched: the first image build spent 218 s cooking, then `dx bundle` recompiled all 334 browser and 523 server crates
+  anyway. BuildKit cache mounts on the cargo registry and `target/` reuse whatever dx compiled last time, with no coupling
+  to dx internals. The trade-off: cache mounts live on the machine that builds, so a CI runner needs its own cache step.
+- **Slim, non-root runtime.** The tutorial runs from the full Rust image. Ours is `debian:trixie-slim` (same glibc as the
+  `rust:*-trixie` builder) with `ca-certificates` and `curl` for the healthcheck, running as an unprivileged `app` user.
+- **Clean asset build.** `.dockerignore` drops `assets/tailwind.css`, so the image always compiles Tailwind from source
+  the way a fresh clone does.
+- **Pre-compressed assets.** `[web] pre_compress = true` in `Dioxus.toml` makes `dx bundle` write brotli copies, and the
+  Dioxus server sends them to browsers that accept `br`: the wasm download fell from 3,209,747 to 645,592 bytes.
+
+| Build | Time |
+|---|---|
+| cargo-chef, first build | 218 s cooking + 241 s `dx bundle` (cook unused) |
+| Cache mounts, cold | 249 s |
+| Cache mounts, after a source change | 31 s |
 
 ## Server functions are thin
 

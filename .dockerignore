@@ -1,3 +1,4 @@
 target
 .git
 .env
+assets/tailwind.css

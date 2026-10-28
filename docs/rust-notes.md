@@ -96,3 +96,21 @@ flowchart LR
 | Drop rolls back | `let txn = db.begin()` ... `txn.commit()` in `src/server/notes.rs` | If any `?` returns early, the transaction is dropped without `commit` and rolls back: the note and its audit row are saved together or not at all | [ch15-03](https://doc.rust-lang.org/book/ch15-03-drop.html) |
 | `cfg` on statements | `request_user` in `src/api/auth.rs:95-98` | One function, two bodies: the server reads the session, the browser build never calls it and says so with `unreachable!` | [Reference](https://doc.rust-lang.org/reference/conditional-compilation.html) |
 | Tests that read source | `include_str!` in `src/server/notes_tests.rs:22`, `src/ui/component_styles.rs:48` | Architecture rules as tests: only `scoped()` may query notes, and every component stylesheet must be linked | [std](https://doc.rust-lang.org/std/macro.include_str.html) |
+
+## Phase 5: production image
+
+```mermaid
+flowchart LR
+  S[src/] -- "dx bundle --release" --> W["public/: app.wasm 3.2 MB (646 KB brotli), JS, CSS"]
+  S --> B["server: 24 MB native binary"]
+  W --> I["debian:trixie-slim image, 147 MB"]
+  B --> I
+```
+
+| Concept | Where | In one line | Read |
+|---|---|---|---|
+| Profiles | `dx bundle --release` in `Dockerfile` | `dev` compiles fast with checks and debug info; `release` optimises. dx builds with `wasm-release` and `server-release`, which inherit `release`. Argon2 went from about 300 ms (dev) to 67 ms (release) | [ch14-01](https://doc.rust-lang.org/book/ch14-01-release-profiles.html) |
+| One crate, two targets | `public/` and `server` in the image | The same source compiles to a wasm module for the browser (feature `web`) and a native binary (feature `server`). SeaORM and Argon2 exist only in the binary | [Cargo features](https://doc.rust-lang.org/cargo/reference/features.html) |
+| Dynamic linking | `ldd /usr/local/app/server` lists `libc`, `libm`, `libgcc_s` | Rust links its own crates statically but uses the system C library, so the runtime image must be the same Debian release as the builder | [rustc linkage](https://doc.rust-lang.org/reference/linkage.html) |
+| Build caching | `--mount=type=cache` in `Dockerfile` | Cargo reuses compiled crates from `target/` when the profile, flags and features match; keeping `target/` between builds is what makes a rebuild take 31 s | [Cargo build cache](https://doc.rust-lang.org/cargo/reference/build-cache.html) |
+| `Cargo.lock` | repo root | Pins every dependency version, so the image builds the same code as your machine | [Cargo.lock](https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html) |
