@@ -1,0 +1,8 @@
+await-holding-invalid-types = [
+  { path = "generational_box::GenerationalRef", reason = "A read held across an await makes every write fail until it resolves." },
+  { path = "generational_box::GenerationalRefMut", reason = "A write held across an await makes every read and write fail until it resolves." },
+  { path = "dioxus_signals::WriteLock", reason = "A write held across an await makes every read and write fail until it resolves." },
+]
+disallowed-types = [
+  { path = "regex::Regex", reason = "No regex: use string methods and shared text helpers.", allow-invalid = true },
+]

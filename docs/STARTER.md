@@ -61,7 +61,7 @@ Dockerfile        dev and prod stages
 - `app` service: Rust 1.99, the wasm target, `dx` 0.7.10 installed with cargo-binstall.
 - `db` service: `postgres:18` with a named volume.
 - Source is bind-mounted; `target/` and the cargo registry live in named volumes so builds stay fast on macOS.
-- `dx serve` listens on `0.0.0.0:8080` inside the container; hot reload uses the same port.
+- `dx serve` listens on `0.0.0.0:8080` inside the container, published on host port 8090; hot reload uses the same port.
 - Every cargo and dx command runs through `docker compose exec app ...`.
 - VS Code opens the project inside the `app` container (Dev Containers), so rust-analyzer uses the same toolchain.
 
@@ -81,7 +81,7 @@ in `docs/rust-notes.md`.
 ### Acceptance criteria
 
 **Phase 1**
-- GIVEN a fresh clone, WHEN I run `docker compose up`, THEN `localhost:8080` shows the home page and `/health` returns
+- GIVEN a fresh clone, WHEN I run `docker compose up`, THEN `localhost:8090` shows the home page and `/health` returns
   `ok`.
 - GIVEN the app is running, WHEN I edit markup inside `rsx!`, THEN the browser updates without a reload.
 - GIVEN code with a warning, WHEN clippy runs, THEN it fails. A pinned clippy rule rejects `regex::Regex`.

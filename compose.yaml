@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8090:8080"
+    volumes:
+      - .:/app
+      - target:/app/target
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+      - dx-tools:/root/.local/share/.dx
+
+volumes:
+  target:
+  cargo-registry:
+  cargo-git:
+  dx-tools:

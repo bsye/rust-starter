@@ -41,14 +41,24 @@ The newest major published on Docker Hub (`postgres:19` does not exist yet).
 ## Everything runs in containers
 
 No Rust toolchain on the host. `target/` and the cargo registry sit in named volumes because bind-mounted build output
-is slow on macOS.
+is slow on macOS. The tools `dx` downloads on first run (Tailwind, wasm-bindgen, esbuild) live in the `dx-tools` volume
+so a recreated container does not fetch them again.
+
+The app is published on host port 8090: 8080 is a common default and was already taken on the first dev machine.
+
+## Checks run clippy twice
+
+The server build and the browser build compile different code (`cfg(feature = "server")`), so `scripts/check.sh` lints
+each one. A `disallowed-types` rule in `clippy.toml` rejects `regex::Regex`; it was proved by adding regex to a throwaway
+copy and watching clippy fail.
 
 ## Tailwind through dx
 
 The [0.7 release notes](https://dioxuslabs.com/blog/release-070/) say `dx` starts a Tailwind watcher when a
 `tailwind.css` exists at the root, with no separate CLI. The
-[Tailwind guide](https://dioxuslabs.com/learn/0.7/guides/utilities/tailwind) still describes an npm install. We follow
-the release notes and confirm in phase 1.
+[Tailwind guide](https://dioxuslabs.com/learn/0.7/guides/utilities/tailwind) still describes an npm install. Confirmed
+in phase 1: `dx serve` installed Tailwind v4.1.5 itself. Its output, `assets/tailwind.css`, is generated and ignored by
+git.
 
 ## Components through dx components add
 
