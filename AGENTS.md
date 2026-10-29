@@ -185,3 +185,5 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 - Note queries start from `scoped(actor)` in `src/server/notes.rs`; new resources follow the same pattern.
 - Every wait in a script or background job has a deadline (per request and overall) and prints a failure instead of
   hanging; tools a dev server fetches at runtime are installed in the image instead.
+- Run the benchmark from a worktree of `benchmark`, never from the checkout: it reads its scripts from disk while it
+  runs, so a branch switch mid-run breaks it.
