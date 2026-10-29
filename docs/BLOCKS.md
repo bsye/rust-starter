@@ -30,7 +30,7 @@ In the starter today:
 
 | Part | shadcn | Here |
 |---|---|---|
-| Category tabs | Featured, Sidebar, Login, Signup | The same, plus Dashboard |
+| Category tabs | Featured, Sidebar, Login, Signup | The same, plus Chat, and Dashboard later |
 | Preview | The block in an `iframe` of `/view/<style>/<id>` | `iframe` of `/blocks/<id>` |
 | Code | Source files with a file tree | The block's Rust file, read with `include_str!` so it never drifts |
 | Open in new tab | Yes | Yes, the same `/blocks/<id>` route |
@@ -52,6 +52,7 @@ In the starter today:
 | Blocks | Built | Not built, and why |
 |---|---|---|
 | login-01 to 05, signup-01 to 05 | All 10 | |
+| chat-01 | 01 | Not a shadcn block: a chat page built from the chat components ([CHAT.md](CHAT.md)) |
 | sidebar-01 to 16 | 01 to 08, 11 to 14, 16 | 09 nests two sidebars and overrides their widths, which the stock sidebar does not allow without patching it. 15 needs a left and a right sidebar in one provider, which holds a single side. 10 is buildable and next |
 | dashboard-01 | | Needs chart, table and drawer (COMPONENTS.md phases 3 and 4) |
 

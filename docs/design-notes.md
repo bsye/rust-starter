@@ -96,7 +96,11 @@ Dioxus.
   which the image already has. Our `web` feature turns on `dioxus-primitives/web` (the browser clock for `time`), as
   upstream's preview does; without it the calendar panics in the browser with "time not implemented on this platform".
   Upstream's `form` is an empty placeholder (its re-export failed clippy), so it is not
-  installed; shadcn's form is a pattern of field, label and input.
+  installed; shadcn's form is a pattern of field, label and input. The script also clones our registry,
+  [bsye/dioxus-registry](https://github.com/bsye/dioxus-registry), at the commit it names, pins the same versions plus
+  `dioxus-registry-primitives`, points our components' dependencies on upstream's `button` at the upstream clone, and
+  installs each name from whichever registry lists it. `dx` refuses to replace a folder that exists, so updating
+  one of our components means deleting its folder, raising the commit in the script and running it again.
 - **Left as generated, with two patches.** `src/components/` is `dx` output; our own shared UI lives in `src/ui/`. The
   generated `scroll_area` and `virtual_list` stylesheets hold only a comment, the components never load them, and
   `dx`'s CSS-module step rejects a file with no rules, so we deleted both. The other patch: the generated `Textarea` rendered `{children}` inside `<textarea>`; empty children
@@ -181,6 +185,33 @@ plan and status are in [BLOCKS.md](BLOCKS.md).
   for muted panels, separators on cards and the logo mark.
 - **Stock limits seen.** The avatar fallback uses a 1.5rem font and the page background at every size, so initials look
   large in sidebars. The card ignores a `class` and the input sets its own padding, so neither is overridden.
+
+## Chat
+
+shadcn's chat components live in our registry, [bsye/dioxus-registry](https://github.com/bsye/dioxus-registry); the
+plan is [CHAT.md](CHAT.md).
+
+- **Behaviour in a primitive, measured through Dioxus.** The message scroller's policy (follow, anchor, prepend,
+  opening position) and geometry are pure Rust in `dioxus-registry-primitives`, unit tested against layouts built in
+  the test. The browser side measures rows with `MountedData::get_client_rect`, listens with `onscroll`, `onresize`,
+  `onwheel`, `ontouchmove` and `onkeydown`, and scrolls with `MountedData::scroll`; no JavaScript.
+- **Order from position.** Rows register on mount and leave on drop, and a measurement sorts them by their top, so a
+  prepend is seen as a prepend without a `MutationObserver`.
+- **Padding read from layout.** Dioxus does not expose computed styles, so the content's top padding is the first
+  row's offset and the bottom padding is measured whenever the content is taller than the viewport. Upstream's tail
+  spacer cancels the flex gap with a negative margin; ours subtracts the measured gap from its height instead.
+- **The scroll waits for the spacer.** A move is stored in a signal; an effect in the viewport performs it after the
+  render that applied the spacer height, because scrolling first would be clamped to the old content height.
+- **Every anchor seen is handled.** Upstream re-anchors any turn it has not anchored yet when the row count stays the
+  same, which would jump to the first turn of a loaded transcript when a typing row is swapped for a reply. Anchors
+  present after any content change are marked handled, so only a newly arrived turn settles at the top.
+- **Commands do not return a value.** Upstream's `scrollToMessage` returns whether it found the row; ours runs after an
+  async measurement, so the hooks return nothing and an unknown id is queued only while the transcript is empty.
+- **Cross-registry button.** Attachment, input group and the scroll button use upstream's `button`, which already has
+  the `ghost`, `outline`, `icon-xs` and `icon-sm` shadcn uses; the registry copies it only so its preview builds.
+- **The chat block is local.** `chat-01` shows a sample thread between fictional teams and appends what you send,
+  with picked files as chips (name, type and size read in the browser; nothing is uploaded). Replies, persistence and
+  other people need backend work that is not approved.
 
 ## 404 status
 

@@ -2,7 +2,7 @@
 
 Goal: every [shadcn/ui](https://ui.shadcn.com/docs/components) component exists for Dioxus, and the starter's `/components`
 page shows all of them. What [dioxus-components](https://github.com/DioxusLabs/components) lacks we build in its format, in
-our own registry repo, so anyone can install it with `dx components add --git`. Status: phase 1 done; phase 2 next.
+our own registry repo, so anyone can install it with `dx components add --git`. Status: phase 1 done; phase 5 (chat) done in [bsye/dioxus-registry](https://github.com/bsye/dioxus-registry), with spinner and input group from phase 2 ([CHAT.md](CHAT.md)); the rest of phase 2 next.
 
 ## Decisions
 
@@ -12,7 +12,7 @@ our own registry repo, so anyone can install it with `dx components add --git`. 
 | Chat components | In scope, all six |
 | Charts | Built in Rust; no prebuilt Rust charts exist for Dioxus |
 | Dioxus-only components | On the page too |
-| Where new components live | A public registry repo under `bsye`, in the dioxus-components format, using the same `dioxus-primitives` pin |
+| Where new components live | [bsye/dioxus-registry](https://github.com/bsye/dioxus-registry), public, in the dioxus-components format, using the same `dioxus-primitives` pin |
 | The TLS bug in `dx components` | Worked around with a local clone, not reported |
 
 ## What exists (checked 2026-10-29)
@@ -77,8 +77,8 @@ commit, so adding a component stays one command.
 | # | Phase | Delivers |
 |---|---|---|
 | 1 | Upstream set | The 35 components from the 0.8 registry we did not have (all but the empty `form`), installed; the showcase with sections and contents |
-| 2 | Registry repo and small gaps | The registry repo with checks, then alert, breadcrumb, button group, empty, field, input group, kbd, native select, spinner |
+| 2 | Registry repo and small gaps | The registry repo with checks (done), input group and spinner (done), then alert, breadcrumb, button group, empty, field, kbd, native select |
 | 3 | Large gaps | Carousel, command, drawer, navigation menu, resizable; table and input OTP from their open PRs |
 | 4 | Charts | Area, bar, line, pie and radial charts in SVG, matching shadcn's chart examples |
-| 5 | Chat | Attachment, bubble, direction, marker, message, message scroller |
+| 5 | Chat | Attachment, bubble, direction, marker, message, message scroller (done, [CHAT.md](CHAT.md)) |
 | 6 | Measure | Wasm size and Lighthouse before and after, the benchmark rerun |

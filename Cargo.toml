@@ -24,6 +24,7 @@ async-trait = { version = "0.1.92", optional = true }
 posthog-rs = { version = "0.30.0", default-features = false, features = ["async-client"], optional = true }
 time = { version = "0.3.44", default-features = false }
 palette = { version = "0.7.6", default-features = false }
+dioxus-registry-primitives = { git = "https://github.com/bsye/dioxus-registry", rev = "87a6d26ddaeb3ef4b788dafd44fdc3525d9498f1", version = "0.1.0", default-features = false }
 
 [dev-dependencies]
 dioxus-ssr = "=0.8.0-alpha.3"
