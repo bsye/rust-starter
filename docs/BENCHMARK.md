@@ -10,7 +10,7 @@ same container limits. Versions checked on 2026-10-28.
 
 | | Rust starter | Nuxt baseline |
 |---|---|---|
-| Framework | Dioxus 0.7.10 | [Nuxt](https://nuxt.com) 4.6.3 (Vue, Nitro) |
+| Framework | Dioxus 0.8.0-alpha.3 (0.7.10 as a variant) | [Nuxt](https://nuxt.com) 4.6.3 (Vue, Nitro) |
 | Runtime | Native binary | Node 26 LTS |
 | Database | SeaORM 2.0 | [Drizzle](https://orm.drizzle.team) 0.45 + postgres.js |
 | Auth | axum_session, sessions in Postgres | [nuxt-auth-utils](https://github.com/atinux/nuxt-auth-utils) 0.5, sealed cookie sessions |
@@ -24,9 +24,9 @@ Each variant is a branch, cloned fresh for every run, so the report measures com
 
 | Variant | Branch | What changes |
 |---|---|---|
-| Rust, Dioxus 0.7 | `main` | The starter as built |
+| Rust, Dioxus 0.7 | `dioxus-0.7` | The starter as first built |
 | Rust, Dioxus 0.7, mold | `faster-builds` | [mold](https://github.com/rui314/mold) linker, line tables only for our crate, no debug info for dependencies |
-| Rust, Dioxus 0.8 alpha, mold, hot-patch | `dioxus-0.8` | The mold settings, Dioxus 0.8.0-alpha.3, `dx serve --hot-patch`, and the crate layout hot-patching needs ([design notes](https://github.com/bsye/rust-starter/blob/dioxus-0.8/docs/design-notes.md#hot-patching) on that branch) |
+| Rust, Dioxus 0.8 alpha, mold, hot-patch | `main` | The mold settings, Dioxus 0.8.0-alpha.3, `dx serve --hot-patch`, and the crate layout hot-patching needs ([design notes](design-notes.md#hot-patching)) |
 
 Features and production cover 0.7 and 0.8 (mold only changes dev builds); the developer loop covers all three.
 

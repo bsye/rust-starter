@@ -4,10 +4,10 @@ import { join } from 'node:path'
 import { REPO_DIR, sh } from './lib.mjs'
 
 export const VARIANTS = {
-  rust07: { label: 'Rust, Dioxus 0.7', kind: 'rust', branch: 'main', devPort: 9091, prodPort: 9081, image: 'rust-starter:prod' },
+  rust07: { label: 'Rust, Dioxus 0.7', kind: 'rust', branch: 'dioxus-0.7', devPort: 9091, prodPort: 9081, image: 'rust-starter:prod' },
   rust07fast: { label: 'Rust, Dioxus 0.7, mold', kind: 'rust', branch: 'faster-builds', devPort: 9093 },
-  rust08: { label: 'Rust, Dioxus 0.8 alpha, mold, hot-patch', kind: 'rust', branch: 'dioxus-0.8', devPort: 9094, prodPort: 9083, image: 'rust-starter-08:prod' },
-  nuxt: { label: 'Nuxt', kind: 'nuxt', branch: 'benchmark', subdir: 'bench/nuxt', devPort: 9092, prodPort: 9082, image: 'nuxt-starter:prod' },
+  rust08: { label: 'Rust, Dioxus 0.8 alpha, mold, hot-patch', kind: 'rust', branch: 'main', devPort: 9094, prodPort: 9083, image: 'rust-starter-08:prod' },
+  nuxt: { label: 'Nuxt', kind: 'nuxt', branch: 'main', subdir: 'bench/nuxt', devPort: 9092, prodPort: 9082, image: 'nuxt-starter:prod' },
 }
 
 export const FEATURES = ['rust07', 'rust08', 'nuxt']

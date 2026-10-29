@@ -7,10 +7,10 @@ ran 3 times unless stated, with the variants alternating.
 
 | Variant | Branch |
 |---|---|
-| Rust, Dioxus 0.7 | `main` |
+| Rust, Dioxus 0.7 | `dioxus-0.7` |
 | Rust, Dioxus 0.7, mold | `faster-builds` |
-| Rust, Dioxus 0.8 alpha, mold, hot-patch | `dioxus-0.8` |
-| Nuxt | `benchmark` |
+| Rust, Dioxus 0.8 alpha, mold, hot-patch | `main` |
+| Nuxt | `main` |
 
 ## Features
 

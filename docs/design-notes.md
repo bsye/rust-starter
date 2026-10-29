@@ -2,12 +2,14 @@
 
 Why the starter is built the way it is. The plan lives in [STARTER.md](STARTER.md).
 
-## Dioxus 0.8 alpha on this branch
+## Dioxus 0.8 alpha
 
-`main` stays on 0.7.10, the current stable release; 0.8 is in alpha (alpha.3 on 2026-10-16). This branch runs 0.8 for
-Rust hot-patching in the browser. On 0.7.10 with Rust 1.99, wasm patches fail with "exceptions proposal not enabled"
-(fixed in [#5843](https://github.com/DioxusLabs/dioxus/pull/5843), 0.8 only). With Rust 1.98 and wasm-bindgen pinned
-to 0.2.127, 0.7.10 patches the server, but the browser fails to load the patched wasm.
+`main` runs 0.8.0-alpha.3 (2026-10-16) for Rust hot-patching in the browser; 0.7.10, the current stable release, stays
+on the `dioxus-0.7` branch. On 0.7.10 with Rust 1.99, wasm patches fail with "exceptions proposal not enabled" (fixed
+in [#5843](https://github.com/DioxusLabs/dioxus/pull/5843), 0.8 only). With Rust 1.98 and wasm-bindgen pinned to
+0.2.127, 0.7.10 patches the server, but the browser fails to load the patched wasm. The cost, measured in
+[bench/REPORT.md](../bench/REPORT.md): a slower first run and restart, fewer list-page requests per second and more idle
+memory than 0.7.
 
 ## Hot-patching
 
@@ -111,7 +113,7 @@ rendering answers with a real 404 instead of a 200 page that says "not found".
 ## Tailwind binary baked into the image
 
 On a fresh tools volume, `dx serve` downloads Tailwind and then fails to start its watcher, so the first run had no CSS
-until a restart. The dev image now downloads the exact binary `dx` 0.7.10 expects (`TAILWIND_VERSION=4.1.5`) to its
+until a restart. The dev image now downloads the exact binary `dx` expects (`TAILWIND_VERSION=4.1.5`, for both 0.7.10 and 0.8.0-alpha.3) to its
 tools folder, and the named volume is seeded from the image. Bump `TAILWIND_VERSION` with `DIOXUS_CLI_VERSION`.
 
 ## Tests without a Dioxus test runner
