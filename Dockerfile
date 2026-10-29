@@ -6,7 +6,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends mold \
     && rm -rf /var/lib/apt/lists/* \
     && rustup target add wasm32-unknown-unknown \
-    && rustup component add rustfmt clippy
+    && rustup component add rustfmt clippy \
+    && rustup toolchain install nightly --profile minimal
 RUN curl -fsSL "https://github.com/cargo-bins/cargo-binstall/releases/download/v${BINSTALL_VERSION}/cargo-binstall-$(uname -m)-unknown-linux-musl.tgz" \
     | tar -xz -C /usr/local/cargo/bin \
     && cargo binstall --no-confirm "dioxus-cli@${DIOXUS_CLI_VERSION}"
