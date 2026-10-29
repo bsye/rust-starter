@@ -1,3 +1,4 @@
+mod analytics;
 mod api;
 mod app;
 pub mod components;

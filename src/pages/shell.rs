@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_icons::lucide::{LogIn, LogOut};
 
+use crate::analytics::use_analytics;
 use crate::app::Route;
 use crate::components::button::{Button, ButtonVariant};
 use crate::hooks::{use_current_user_provider, use_sign_out};
@@ -12,6 +13,7 @@ const NAV_LINK: &str =
 #[component]
 pub fn Shell() -> Element {
     let current = use_current_user_provider();
+    use_analytics(current);
     let route = use_route::<Route>();
     let user = current.get();
     rsx! {

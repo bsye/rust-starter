@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use super::{ApiError, FieldErrors};
 #[cfg(feature = "server")]
 use {
+    crate::analytics::{self, AnalyticsEvent},
     crate::server::auth::{self, Auth, accounts},
     dioxus::server::axum::Extension,
     sea_orm::DatabaseConnection,
@@ -75,6 +76,7 @@ fn looks_like_email(email: &str) -> bool {
 pub async fn sign_up(credentials: Credentials) -> Result<UserInfo, ApiError> {
     let user = accounts::create(&db, credentials).await?;
     auth::start_session(&session, user.id);
+    analytics::capture(AnalyticsEvent::SignedUp, user.id);
     Ok(user)
 }
 
@@ -82,6 +84,7 @@ pub async fn sign_up(credentials: Credentials) -> Result<UserInfo, ApiError> {
 pub async fn sign_in(credentials: Credentials) -> Result<UserInfo, ApiError> {
     let user = accounts::verify(&db, credentials).await?;
     auth::start_session(&session, user.id);
+    analytics::capture(AnalyticsEvent::SignedIn, user.id);
     Ok(user)
 }
 
