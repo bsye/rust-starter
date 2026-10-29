@@ -4,8 +4,8 @@ use dioxus_icons::lucide::{ArrowLeft, Pencil};
 use super::{delete::DeleteNoteButton, skeleton::NoteDetailSkeleton};
 use crate::api::{ApiError, Note, get_note};
 use crate::app::Route;
-use crate::components::card::Card;
 use crate::ui::{ButtonLink, LoadError, Missing, PageHeader, format};
+use rust_starter::components::card::Card;
 
 #[component]
 pub fn NoteDetail(id: ReadSignal<i64>) -> Element {

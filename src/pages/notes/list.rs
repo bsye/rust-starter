@@ -4,8 +4,8 @@ use dioxus_icons::lucide::{ArrowLeft, Plus, StickyNote};
 use super::{card::NoteCard, skeleton::NoteListSkeleton};
 use crate::api::{NotePage, list_notes};
 use crate::app::Route;
-use crate::components::button::ButtonVariant;
 use crate::ui::{ButtonLink, EmptyState, LoadError, PageHeader, Pager, format, neighbours};
+use rust_starter::components::button::ButtonVariant;
 
 #[component]
 pub fn Notes(page: ReadSignal<u64>) -> Element {

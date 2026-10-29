@@ -3,16 +3,11 @@ name = "rust-starter"
 version = "0.1.0"
 edition = "2024"
 publish = false
-default-run = "rust-starter"
-
-[[bin]]
-name = "seed"
-required-features = ["server"]
 
 [dependencies]
-dioxus = { version = "0.7.10", features = ["router", "fullstack"] }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", default-features = false, version = "0.0.1" }
-dioxus-icons = { version = "0.1.0", default-features = false }
+dioxus = { version = "=0.8.0-alpha.3", features = ["router", "fullstack"] }
+dioxus-primitives = { git = "https://github.com/DioxusLabs/components", rev = "9db1d9a8a60a7e05bc1284ad6bd1d16ea74bbed3", default-features = false }
+dioxus-icons = { version = "=0.2.0-alpha.3", default-features = false }
 serde = { version = "1.0.229", features = ["derive"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 thiserror = "2.0.21"
@@ -30,6 +25,12 @@ async-trait = { version = "0.1.92", optional = true }
 [dev-dependencies]
 sqlx = { version = "0.9.0", default-features = false, features = ["postgres", "runtime-tokio", "macros", "migrate"] }
 tower = { version = "0.5.3", features = ["util"] }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
 
 [features]
 default = ["web"]

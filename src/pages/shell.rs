@@ -2,16 +2,16 @@ use dioxus::prelude::*;
 use dioxus_icons::lucide::{LogIn, LogOut};
 
 use crate::app::Route;
-use crate::components::button::{Button, ButtonVariant};
-use crate::hooks::{use_current_user_provider, use_sign_out};
+use crate::hooks::{use_current_user, use_sign_out};
 use crate::ui::ButtonLink;
+use rust_starter::components::button::{Button, ButtonVariant};
 
 const NAV_LINK: &str =
     "text-muted transition-colors hover:text-foreground data-[active=true]:text-foreground";
 
 #[component]
 pub fn Shell() -> Element {
-    let current = use_current_user_provider();
+    let current = use_current_user();
     let route = use_route::<Route>();
     let user = current.get();
     rsx! {

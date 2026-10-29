@@ -17,7 +17,7 @@ Needs Docker only.
 Fill an account with 10,000 generated notes:
 
 ```sh
-docker compose exec app cargo run --bin seed --no-default-features --features server -- you@example.com 10000
+docker compose exec app cargo run --no-default-features --features server -- seed you@example.com 10000
 ```
 
 Checks (format, clippy for server and browser, tests; the database tests need the stack running):

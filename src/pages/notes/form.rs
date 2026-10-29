@@ -2,9 +2,9 @@ use dioxus::prelude::*;
 use dioxus_icons::lucide::Save;
 
 use crate::api::{FieldErrors, Note, NoteInput};
-use crate::components::{button::Button, input::Input, textarea::Textarea};
 use crate::hooks::use_note_form;
 use crate::ui::Field;
+use rust_starter::components::{button::Button, input::Input, textarea::Textarea};
 
 #[component]
 pub fn NoteFormView(existing: Option<Note>) -> Element {

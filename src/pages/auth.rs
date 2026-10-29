@@ -3,9 +3,9 @@ use dioxus_icons::lucide::{LogIn, UserPlus};
 
 use crate::api::{Credentials, FieldErrors};
 use crate::app::Route;
-use crate::components::{button::Button, input::Input};
 use crate::hooks::{CredentialsMode, use_credentials_form, use_current_user};
 use crate::ui::{Field, PageHeader, Redirect};
+use rust_starter::components::{button::Button, input::Input};
 
 #[component]
 pub fn SignIn() -> Element {

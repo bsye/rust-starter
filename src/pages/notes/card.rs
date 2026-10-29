@@ -2,8 +2,8 @@ use dioxus::prelude::*;
 
 use crate::api::Note;
 use crate::app::Route;
-use crate::components::card::{Card, CardContent, CardDescription, CardHeader, CardTitle};
 use crate::ui::format;
+use rust_starter::components::card::{Card, CardContent, CardDescription, CardHeader, CardTitle};
 
 const CARD_LINK: &str = "block rounded-2xl outline-offset-2 hover:outline-2 hover:outline-border focus-visible:outline-2 focus-visible:outline-border";
 
