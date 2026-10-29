@@ -20,6 +20,7 @@ browser, keeping their state.
 |---|---|---|
 | App code in the binary | `dx` patches the binary crate only; edits to code in the library were never applied | `src/main.rs` holds the module tree, `src/lib.rs` only the generated components |
 | Nightly in the image | the 0.8 dev server runs `cargo +nightly rustc --unit-graph` at startup; without nightly, rustup downloads it at runtime with no timeout, and a stalled download hung the dev server | `Dockerfile` base stage |
+| A restart after structural edits | a patch swaps functions in the running server and the open tab, but every page load fetches the base wasm from the last full build; after adding routes and modules, a reload ran that old code against the patched server's HTML and panicked with `HydrationMismatch` | `docker compose restart app`, then reload |
 | Signed-in user at the root | a patch remounts every component whose code changed; a remounted `use_server_cached` in the browser has no page data, so it called the server-only `request_user` and crashed the page | `use_current_user_provider` and `use_analytics` in `App`, the root, which is never remounted |
 
 A second binary would need the app code in a library to share it, so seeding is a subcommand of the main binary:
