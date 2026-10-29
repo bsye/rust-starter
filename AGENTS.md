@@ -177,10 +177,11 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 
 - Never use Tailwind to override a property a `src/components/` component sets: its unlayered CSS beats Tailwind's
   layered utilities. Wrap it instead.
-- `src/components/` is `dx components add` output; leave it as generated (patches are listed in
-  `docs/design-notes.md`) and put shared UI in `src/ui/`.
+- Add components with `./scripts/components.sh <names>` in the `app` container, never plain `dx components add` (it
+  fails on Dioxus 0.8 alpha; see `docs/design-notes.md`). `src/components/` is its output; leave it as generated
+  (patches are listed in `docs/design-notes.md`) and put shared UI in `src/ui/`.
 - Every cargo and dx command runs inside the `app` container (`docker compose exec app ...`).
-- After `dx components add`, add the new `style.css` to `COMPONENT_STYLES` in `src/ui/component_styles.rs` (a test fails
+- After adding a component, add the new `style.css` to `COMPONENT_STYLES` in `src/ui/component_styles.rs` (a test fails
   otherwise).
 - Note queries start from `scoped(actor)` in `src/server/notes.rs`; new resources follow the same pattern.
 - App code lives in the binary (`src/main.rs`), because `dx` hot-patches only the binary crate; `src/lib.rs` holds only

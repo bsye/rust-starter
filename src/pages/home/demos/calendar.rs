@@ -1,0 +1,25 @@
+use dioxus::prelude::*;
+use rust_starter::components::calendar::*;
+use time::{Date, macros::date};
+
+#[component]
+pub fn Demo() -> Element {
+    let mut selected_date = use_signal(|| None::<Date>);
+    let mut view_date = use_signal(|| date!(2026 - 05 - 15));
+    rsx! {
+        div { style: "padding: 20px;",
+            Calendar {
+                selected_date: selected_date(),
+                on_date_change: move |date| {
+                    selected_date.set(date);
+                },
+                view_date: view_date(),
+                on_view_change: move |new_view: Date| {
+                    view_date.set(new_view);
+                },
+                min_date: date!(1995 - 07 - 21),
+                max_date: date!(2035 - 09 - 11),
+            }
+        }
+    }
+}

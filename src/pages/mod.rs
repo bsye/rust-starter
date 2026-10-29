@@ -6,7 +6,7 @@ mod require_user;
 mod shell;
 
 pub use auth::{SignIn, SignUp};
-pub use home::Home;
+pub use home::{Home, SidebarDemo};
 pub use not_found::NotFound;
 pub use notes::{EditNote, NewNote, NoteDetail, Notes};
 pub use require_user::RequireUser;

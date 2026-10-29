@@ -3,7 +3,8 @@ use dioxus::prelude::*;
 use crate::analytics::use_analytics;
 use crate::hooks::use_current_user_provider;
 use crate::pages::{
-    EditNote, Home, NewNote, NotFound, NoteDetail, Notes, RequireUser, Shell, SignIn, SignUp,
+    EditNote, Home, NewNote, NotFound, NoteDetail, Notes, RequireUser, Shell, SidebarDemo, SignIn,
+    SignUp,
 };
 use crate::ui::ComponentStyles;
 
@@ -12,6 +13,8 @@ const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 #[derive(Debug, Clone, PartialEq, Routable)]
 pub enum Route {
+    #[route("/demos/sidebar")]
+    SidebarDemo {},
     #[layout(Shell)]
     #[route("/")]
     Home {},
@@ -78,6 +81,7 @@ mod tests {
         assert_eq!(parse("/notes/42/edit"), Route::EditNote { id: 42 });
         assert_eq!(parse("/sign-in"), Route::SignIn {});
         assert_eq!(parse("/sign-up"), Route::SignUp {});
+        assert_eq!(parse("/demos/sidebar"), Route::SidebarDemo {});
     }
 
     #[test]

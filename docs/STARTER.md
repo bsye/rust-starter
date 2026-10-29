@@ -26,7 +26,7 @@ Versions checked on 2026-10-28 against crates.io and Docker Hub. Reasons in [des
 | Database access | [SeaORM](https://www.sea-ql.org/SeaORM/), queries and migrations in Rust | 2.0.4 |
 | Sessions and auth | [axum_session_auth](https://github.com/AscendingCreations/AxumSessionAuth) + axum_session_sqlx | 0.22 / 0.12 |
 | Password hashing | argon2 | 0.6.0 |
-| Components | [dioxus-components](https://github.com/DioxusLabs/dioxus-components) (shadcn style, `dx components add`) | latest |
+| Components | [dioxus-components](https://github.com/DioxusLabs/dioxus-components) (shadcn style, added with `scripts/components.sh`) | latest |
 | Styling | Tailwind v4, watcher started by `dx` | v4 |
 | Errors | thiserror | 2.0 |
 
@@ -49,7 +49,7 @@ src/
   lib.rs          the generated components, as a library
   app.rs          route enum and root component
   pages/          layout, sign-in guard, one file or folder per route, 404
-  components/     output of dx components add, left as generated
+  components/     output of scripts/components.sh (dx components add), left as generated
   ui/             our shared UI built on the stock components
   hooks/          state and actions: forms, current user, sign-out, delete
   api/            shared types, validation and server functions (bodies run on the server only)
