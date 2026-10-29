@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import { BENCH_DIR, docker } from './lib.mjs'
+import { VARIANTS } from './variants.mjs'
 
 const median = values => {
   const sorted = [...values].sort((a, b) => a - b)
@@ -11,99 +12,106 @@ const number = new Intl.NumberFormat('en', { maximumFractionDigits: 1 })
 const seconds = ms => `${number.format(ms / 1000)} s`
 const millis = ms => `${number.format(ms)} ms`
 const mib = value => `${number.format(value)} MiB`
-const bytes = value => `${number.format(value / 1_000_000)} MB`
+const megabytes = value => `${number.format(value / 1_000_000)} MB`
 const stat = (values, format) => values.length > 1
-  ? `${format(median(values))} (${format(Math.min(...values))} to ${format(Math.max(...values))}, n=${values.length})`
+  ? `${format(median(values))} (${format(Math.min(...values))} to ${format(Math.max(...values))})`
   : format(values[0])
-const ratio = (rust, nuxt, higherIsBetter) => {
-  const factor = higherIsBetter ? rust / nuxt : nuxt / rust
-  return factor >= 1 ? `Rust ${number.format(factor)}x better` : `Nuxt ${number.format(1 / factor)}x better`
-}
-const row = (label, rust, nuxt, format, higherIsBetter = false) =>
-  `| ${label} | ${stat(rust, format)} | ${stat(nuxt, format)} | ${ratio(median(rust), median(nuxt), higherIsBetter)} |`
-const table = (rows, label = 'Metric') => [`| ${label} | Rust starter | Nuxt baseline | Difference |`, '|---|---|---|---|', ...rows].join('\n')
 
-function featureSection({ rust, nuxt }, production) {
-  const parityRows = Object.keys(production.rust.parity).map(item =>
-    `| ${item} | ${production.rust.parity[item] ? 'pass' : 'FAIL'} | ${production.nuxt.parity[item] ? 'pass' : 'FAIL'} |`)
+function table(results, label, rows) {
+  const variants = Object.keys(results)
+  const header = `| ${label} | ${variants.map(variant => VARIANTS[variant].label).join(' | ')} | Best |`
+  const divider = `|---|${variants.map(() => '---').join('|')}|---|`
+  const lines = rows.map(({ name, values, format, higherIsBetter = false }) => {
+    const present = variants.filter(variant => values(results[variant])?.length)
+    const best = present.reduce((a, b) => (higherIsBetter ? median(values(results[b])) > median(values(results[a])) : median(values(results[b])) < median(values(results[a]))) ? b : a)
+    const cells = variants.map(variant => values(results[variant])?.length ? stat(values(results[variant]), format) : 'not measured')
+    return `| ${name} | ${cells.join(' | ')} | ${VARIANTS[best].label} |`
+  })
+  return [header, divider, ...lines].join('\n')
+}
+
+function featureSection(features, production) {
+  const items = Object.keys(Object.values(production)[0].parity)
+  const variants = Object.keys(production)
   return `## Features
 
-${table([
-  row('Hand-written code (lines)', [rust.codeLines], [nuxt.codeLines], number.format),
-  row('Test code (lines)', [rust.testLines], [nuxt.testLines], number.format),
-  row('Tests', [rust.testCount], [nuxt.testCount], number.format, true),
-  row('Generated code (lines)', [rust.generatedLines], [nuxt.generatedLines], number.format),
-  row('Config (lines)', [rust.configLines], [nuxt.configLines], number.format),
-  row('Direct dependencies', [rust.dependencies.direct], [nuxt.dependencies.direct], number.format),
-  row('All dependencies (lockfile)', [rust.dependencies.total], [nuxt.dependencies.total], number.format),
+${table(features, 'Metric', [
+  { name: 'Hand-written code (lines)', values: r => [r.codeLines], format: number.format },
+  { name: 'Test code (lines)', values: r => [r.testLines], format: number.format },
+  { name: 'Tests', values: r => [r.testCount], format: number.format, higherIsBetter: true },
+  { name: 'Generated code (lines)', values: r => [r.generatedLines], format: number.format },
+  { name: 'Config (lines)', values: r => [r.configLines], format: number.format },
+  { name: 'Direct dependencies', values: r => [r.dependencies.direct], format: number.format },
+  { name: 'All dependencies (lockfile)', values: r => [r.dependencies.total], format: number.format },
 ])}
 
-Code is counted with [scc](https://github.com/boyter/scc). Hand-written code excludes tests, generated stock components,
-generated migrations and theme CSS. Rust: ${Object.entries(rust.byLanguage).map(([name, lines]) => `${name} ${lines}`).join(', ')} lines including inline tests.
-Nuxt: ${Object.entries(nuxt.byLanguage).map(([name, lines]) => `${name} ${lines}`).join(', ')}.
+Code is counted with [scc](https://github.com/boyter/scc), without tests, generated stock components, generated
+migrations or theme CSS. Each variant is counted from its own branch; the 0.8 branch moves the app into the binary
+crate and makes seeding a subcommand, which hot-patching needs.
 
 ### Parity checklist
 
-| Check | Rust starter | Nuxt baseline |
-|---|---|---|
-${parityRows.join('\n')}`
+| Check | ${variants.map(variant => VARIANTS[variant].label).join(' | ')} |
+|---|${variants.map(() => '---').join('|')}|
+${items.map(item => `| ${item} | ${variants.map(variant => production[variant].parity[item] ? 'pass' : 'FAIL').join(' | ')} |`).join('\n')}`
 }
 
-function devloopSection({ rust, nuxt }) {
-  const markup = app => app.markupChange.map(sample => sample.ms)
-  const reloads = app => app.markupChange.filter(sample => sample.reloaded).length
+function reloads(devloop, metric) {
+  return Object.entries(devloop).map(([variant, r]) =>
+    `${VARIANTS[variant].label} ${r[metric].filter(sample => sample.reloaded).length} of ${r[metric].length}`).join(', ')
+}
+
+function devloopSection(devloop) {
   return `## Developer loop
 
-${table([
-  row('First run (clone to first page, cold caches)', rust.firstRunMs, nuxt.firstRunMs, seconds),
-  row('Restart (warm caches)', rust.restartMs, nuxt.restartMs, seconds),
-  row('Markup change visible in the browser', markup(rust), markup(nuxt), millis),
-  row('Server code change served', rust.logicChangeMs, nuxt.logicChangeMs, seconds),
-  row('Lint, typecheck and tests (warm)', rust.checksMs, nuxt.checksMs, seconds),
-  row('Production image build, cold', rust.imageBuildMs.cold, nuxt.imageBuildMs.cold, seconds),
-  row('Production image build, after a one-line change', rust.imageBuildMs.warm, nuxt.imageBuildMs.warm, seconds),
+${table(devloop, 'Metric', [
+  { name: 'First run (clone to first page, cold caches)', values: r => r.firstRunMs, format: seconds },
+  { name: 'Restart (warm caches)', values: r => r.restartMs, format: seconds },
+  { name: 'Markup change visible in the browser', values: r => r.markupChange.map(sample => sample.ms), format: millis },
+  { name: 'Browser logic change visible (count formatter)', values: r => r.uiLogicChange.map(sample => sample.ms), format: seconds },
+  { name: 'Server logic change served by the API', values: r => r.logicChangeMs, format: seconds },
+  { name: 'Lint, typecheck and tests (warm)', values: r => r.checksMs, format: seconds },
+  { name: 'Production image build, cold', values: r => r.imageBuildMs?.cold, format: seconds },
+  { name: 'Production image build, after a one-line change', values: r => r.imageBuildMs?.warm, format: seconds },
 ])}
 
-Full page reloads during markup changes: Rust ${reloads(rust)} of ${rust.markupChange.length}, Nuxt ${reloads(nuxt)} of ${nuxt.markupChange.length}.`
+Full page reloads during markup changes: ${reloads(devloop, 'markupChange')}. During browser logic changes:
+${reloads(devloop, 'uiLogicChange')}.`
 }
 
-function productionSection({ rust, nuxt }) {
-  const paths = Object.keys(rust.load)
-  const load = (app, path, mode, key) => app.load[path].map(run => run[mode][key])
-  const throughputRows = paths.map(path => row(`\`${path}\` requests/s`, load(rust, path, 'throughput', 'rps'), load(nuxt, path, 'throughput', 'rps'), number.format, true))
-  const latencyRows = paths.flatMap(path => [
-    row(`\`${path}\` p50 at 50 req/s`, load(rust, path, 'fixedRate', 'p50'), load(nuxt, path, 'fixedRate', 'p50'), millis),
-    row(`\`${path}\` p99 at 50 req/s`, load(rust, path, 'fixedRate', 'p99'), load(nuxt, path, 'fixedRate', 'p99'), millis),
-  ])
-  const peak = app => paths.flatMap(path => app.load[path].map(run => run.peakMemoryMiB))
-  const lighthouse = (app, page, key) => app.lighthouse[page].map(run => run[key])
-  const lighthouseRows = ['signIn', 'notes'].flatMap(page => [
-    row(`${page} score`, lighthouse(rust, page, 'score'), lighthouse(nuxt, page, 'score'), number.format, true),
-    row(`${page} LCP`, lighthouse(rust, page, 'lcpMs'), lighthouse(nuxt, page, 'lcpMs'), millis),
-    row(`${page} total blocking time`, lighthouse(rust, page, 'tbtMs'), lighthouse(nuxt, page, 'tbtMs'), millis),
-    row(`${page} bytes transferred`, lighthouse(rust, page, 'totalBytes'), lighthouse(nuxt, page, 'totalBytes'), bytes),
-  ])
+function productionSection(production) {
+  const paths = Object.keys(Object.values(production)[0].load)
+  const load = (path, mode, key) => r => r.load[path].map(run => run[mode][key])
+  const lighthouse = (page, key) => r => r.lighthouse[page].map(run => run[key])
   return `## Production
 
-${table([
-  row('Image size', [rust.imageBytes], [nuxt.imageBytes], bytes),
-  row('Cold start to healthy (incl. migrations)', rust.coldStartMs, nuxt.coldStartMs, millis),
-  row('Memory, idle', rust.idleMemoryMiB, nuxt.idleMemoryMiB, mib),
-  row('Memory, peak under load', peak(rust), peak(nuxt), mib),
-  row('Sign-in p50 (password hashing)', rust.signIn.map(run => run.p50), nuxt.signIn.map(run => run.p50), millis),
+${table(production, 'Metric', [
+  { name: 'Image size', values: r => [r.imageBytes], format: megabytes },
+  { name: 'Cold start to healthy (incl. migrations)', values: r => r.coldStartMs, format: millis },
+  { name: 'Memory, idle', values: r => r.idleMemoryMiB, format: mib },
+  { name: 'Memory, peak under load', values: r => paths.flatMap(path => r.load[path].map(run => run.peakMemoryMiB)), format: mib },
+  { name: 'Sign-in p50 (password hashing)', values: r => r.signIn.map(run => run.p50), format: millis },
 ])}
 
-### Throughput (50 connections, ${rust.load[paths[0]].length} runs of 20 s after a 5 s warm-up)
+### Throughput (50 connections, 20 s runs after a 5 s warm-up)
 
-${table(throughputRows, 'Endpoint')}
+${table(production, 'Endpoint', paths.map(path => ({ name: `\`${path}\` requests/s`, values: load(path, 'throughput', 'rps'), format: number.format, higherIsBetter: true })))}
 
-### Latency at a fixed 50 requests/s (latency corrected, below both apps' capacity)
+### Latency at a fixed 50 requests/s (latency corrected, below every app's capacity)
 
-${table(latencyRows, 'Endpoint')}
+${table(production, 'Endpoint', paths.flatMap(path => [
+  { name: `\`${path}\` p50`, values: load(path, 'fixedRate', 'p50'), format: millis },
+  { name: `\`${path}\` p99`, values: load(path, 'fixedRate', 'p99'), format: millis },
+]))}
 
 ### Lighthouse (mobile preset, 5 runs)
 
-${table(lighthouseRows, 'Page')}`
+${table(production, 'Page', ['signIn', 'notes'].flatMap(page => [
+  { name: `${page} score`, values: lighthouse(page, 'score'), format: number.format, higherIsBetter: true },
+  { name: `${page} LCP`, values: lighthouse(page, 'lcpMs'), format: millis },
+  { name: `${page} total blocking time`, values: lighthouse(page, 'tbtMs'), format: millis },
+  { name: `${page} bytes transferred`, values: lighthouse(page, 'totalBytes'), format: megabytes },
+]))}`
 }
 
 export function report(resultsDir) {
@@ -113,7 +121,12 @@ export function report(resultsDir) {
 
 Generated by \`node bench/run.mjs\` on ${new Date().toISOString().slice(0, 10)}. Plan and method: [docs/BENCHMARK.md](../docs/BENCHMARK.md).
 Machine: ${os.cpus().length} CPU ${os.arch()} ${os.platform()}, Docker ${docker('version', '--format', '{{.Server.Version}}')}.
-Production containers are limited to 2 CPUs and 1 GB each. Values are medians with the range and run count.
+Production containers are limited to 2 CPUs and 1 GB each. Values are medians with the range in brackets; each metric
+ran 3 times unless stated, with the variants alternating.
+
+| Variant | Branch |
+|---|---|
+${Object.entries(VARIANTS).map(([, variant]) => `| ${variant.label} | \`${variant.branch}\` |`).join('\n')}
 
 ${featureSection(load('features'), production)}
 

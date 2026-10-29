@@ -18,6 +18,18 @@ same container limits. Versions checked on 2026-10-28.
 | Styling | Tailwind v4 | Tailwind v4 |
 | Tests | cargo test + sqlx::test | Vitest 5 + @nuxt/test-utils 4 |
 
+### Rust variants
+
+Each variant is a branch, cloned fresh for every run, so the report measures committed code.
+
+| Variant | Branch | What changes |
+|---|---|---|
+| Rust, Dioxus 0.7 | `main` | The starter as built |
+| Rust, Dioxus 0.7, mold | `faster-builds` | [mold](https://github.com/rui314/mold) linker, line tables only for our crate, no debug info for dependencies |
+| Rust, Dioxus 0.8 alpha, mold, hot-patch | `dioxus-0.8` | The mold settings, Dioxus 0.8.0-alpha.3, `dx serve --hot-patch`, and the crate layout hot-patching needs ([design notes](https://github.com/bsye/rust-starter/blob/dioxus-0.8/docs/design-notes.md#hot-patching) on that branch) |
+
+Features and production cover 0.7 and 0.8 (mold only changes dev builds); the developer loop covers all three.
+
 ## Metrics
 
 ### Features
@@ -35,8 +47,9 @@ same container limits. Versions checked on 2026-10-28.
 |---|---|
 | First run | Fresh clone, `docker compose up`, first page served, cold caches |
 | Restart | Stack restart with warm caches, first page served |
-| Markup change | Edit text in a page, time until the browser shows it without a reload ([Playwright](https://playwright.dev), 10 runs) |
-| Logic change | Edit a server function, time until the new behaviour is served (10 runs) |
+| Markup change | Edit text in a page, time until the browser shows it ([Playwright](https://playwright.dev), 10 runs, full reloads counted) |
+| Browser logic change | Edit the count formatter the notes pager calls, time until the browser shows the new count (3 runs, full reloads counted) |
+| Server logic change | Edit the notes query's total, time until `GET /api/notes` returns it (3 runs) |
 | Checks | Lint, typecheck and tests with warm caches |
 | Image build | Cold, and after a one-line change |
 
@@ -44,7 +57,7 @@ same container limits. Versions checked on 2026-10-28.
 
 | Metric | How |
 |---|---|
-| Throughput and latency | [oha](https://github.com/hatoo/oha) 1.16, 10 s warm-up, then 30 s at 50 connections with latency correction: signed-in list (page 1 and 250), detail page, `GET /api/notes`; sign-in on its own |
+| Throughput and latency | [oha](https://github.com/hatoo/oha) 1.16, 5 s warm-up, then 20 s closed loop at 50 connections for throughput and 20 s at a fixed 50 requests/s with latency correction for latency: signed-in list (page 1 and 250), detail page, `GET /api/notes`; sign-in on its own |
 | Cold start | `docker run` until `/health` answers |
 | Memory | Idle and peak under load (`docker stats`) |
 | Image size | `docker images` |
@@ -63,13 +76,14 @@ Both production containers run with the same limits (2 CPUs, 1 GB).
 | # | Phase | Delivers |
 |---|---|---|
 | 1 | Nuxt app | Feature parity with the starter, its tests, Docker dev and prod setup, in `bench/nuxt/` |
-| 2 | Harness | `bench/run.sh` and one script per metric |
+| 2 | Harness | `bench/run.mjs` and one script per part |
 | 3 | Report | First full run, `bench/REPORT.md`, findings in `design-notes.md` |
 
 ## Acceptance criteria
 
 - GIVEN both apps, WHEN the parity checklist runs, THEN each item passes or the difference is listed in the report.
-- GIVEN a clean machine with Docker, WHEN I run `bench/run.sh`, THEN every number in `bench/REPORT.md` is regenerated.
+- GIVEN a clean machine with Docker, WHEN I run `node bench/run.mjs`, THEN every number in `bench/REPORT.md` is
+  regenerated.
 - GIVEN any metric, THEN the report shows its median, its spread and the number of runs.
 
 ## Known caveats

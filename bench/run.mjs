@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { BENCH_DIR, log } from './scripts/lib.mjs'
+import { cleanupCheckouts } from './scripts/variants.mjs'
 
 const PARTS = {
   features: async () => (await import('./scripts/features.mjs')).features(),
@@ -27,3 +28,4 @@ if (['features', 'production', 'devloop'].every(part => existsSync(`${resultsDir
 else {
   log(`results in ${resultsDir}; run the remaining parts with: node bench/run.mjs <part> ${resultsDir}`)
 }
+cleanupCheckouts()

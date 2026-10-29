@@ -233,6 +233,9 @@ Plan in [BENCHMARK.md](BENCHMARK.md); numbers in [bench/REPORT.md](../bench/REPO
 | Nuxt dev container reinstalls dependencies only when the lockfile changes | Running `npm install` on every start made restarts 35 s; that measured the Dockerfile, not Nuxt |
 | Generated code counted apart | shadcn-vue and dioxus-components output, Drizzle's generated migrations and both theme stylesheets are not hand-written |
 | Two warm-ups | 5 s before each load run; one unmeasured check run before timing checks. A cold JIT made Nuxt look half as fast in a first probe |
+| Rust variants are branches cloned fresh | The report measures committed code; `features`, `production` and `devloop` all read the same clones |
+| Browser logic change edits the count formatter in both apps | Both apps format the pager count with one helper (`src/ui/format.rs`, `app/utils/format.ts`). Editing it is a code change, not markup, so it shows what Rust hot-patching adds over a rebuild and reload |
+| Every request and command has a deadline | A dev server that never answered hung an earlier test run for hours; requests now give up after 10 s and docker commands after 30 minutes, and the run fails loudly |
 | Apps alternate within every metric | The first developer-loop pass ran all Rust metrics, then all Nuxt metrics. Re-measured on its own, Nuxt's first run, restart and checks were roughly twice as fast as in that pass, which ran after an hour of Rust compiling. Both parts of the harness now alternate the apps run by run |
 
 ### Why the Rust list page is slower than its API

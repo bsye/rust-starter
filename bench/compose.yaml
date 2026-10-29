@@ -16,14 +16,23 @@ services:
       timeout: 2s
       retries: 60
 
-  rust:
+  rust07:
     <<: *limits
     image: rust-starter:prod
     environment:
-      DATABASE_URL: postgres://postgres@db:5432/rust
-      PUBLIC_URL: http://rust:8080
+      DATABASE_URL: postgres://postgres@db:5432/rust07
+      PUBLIC_URL: http://rust07:8080
     ports:
       - "9081:8080"
+
+  rust08:
+    <<: *limits
+    image: rust-starter-08:prod
+    environment:
+      DATABASE_URL: postgres://postgres@db:5432/rust08
+      PUBLIC_URL: http://rust08:8080
+    ports:
+      - "9083:8080"
 
   nuxt:
     <<: *limits

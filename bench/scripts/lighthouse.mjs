@@ -1,4 +1,4 @@
-import { APPS } from './parity.mjs'
+import { prodApp } from './parity.mjs'
 import { TOOLS_IMAGE, docker, log } from './lib.mjs'
 
 const RUNS = 5
@@ -8,7 +8,7 @@ function audit(app, path, cookie) {
   const headers = cookie ? ['--extra-headers', JSON.stringify({ Cookie: cookie })] : []
   const script = 'CHROME_PATH="$(node -e "console.log(require(\'playwright\').chromium.executablePath())")" exec lighthouse "$@"'
   const output = docker('run', '--rm', '--network', 'host', '--entrypoint', 'sh', TOOLS_IMAGE, '-c', script, 'lighthouse',
-    `${APPS[app].url}${path}`, '--quiet', '--output=json', '--output-path=stdout', '--only-categories=performance',
+    `${prodApp(app).url}${path}`, '--quiet', '--output=json', '--output-path=stdout', '--only-categories=performance',
     '--chrome-flags=--headless=new --no-sandbox', ...headers)
   const report = JSON.parse(output)
   const requests = report.audits['network-requests'].details.items

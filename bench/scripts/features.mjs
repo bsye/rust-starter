@@ -1,8 +1,12 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { REPO_DIR, SCC_IMAGE, docker } from './lib.mjs'
+import { SCC_IMAGE, docker } from './lib.mjs'
+import { FEATURES, VARIANTS, checkout } from './variants.mjs'
 
-const NUXT_DIR = `${REPO_DIR}/bench/nuxt`
+const CONFIG_FILES = {
+  rust: ['Cargo.toml', 'Dioxus.toml', 'Dockerfile', 'compose.yaml', 'clippy.toml', 'tailwind.css', 'scripts/check.sh', '.devcontainer/devcontainer.json', '.cargo/config.toml'],
+  nuxt: ['package.json', 'nuxt.config.ts', 'Dockerfile', 'compose.yaml', 'drizzle.config.ts', 'eslint.config.mjs', 'vitest.config.ts', 'components.json'],
+}
 
 const nonBlank = text => text.split('\n').filter(line => line.trim() !== '').length
 
@@ -23,10 +27,14 @@ function files(dir, extension) {
     .map(entry => join(entry.parentPath, entry.name))
 }
 
-function rustTests() {
+const configLines = (root, kind) => CONFIG_FILES[kind]
+  .filter(path => existsSync(join(root, path)))
+  .reduce((sum, path) => sum + nonBlank(readFileSync(join(root, path), 'utf8')), 0)
+
+function rustTests(root) {
   let lines = 0
   let count = 0
-  for (const file of files(`${REPO_DIR}/src`, '.rs').filter(file => !file.includes('/src/components/'))) {
+  for (const file of files(`${root}/src`, '.rs').filter(file => !file.includes('/src/components/'))) {
     const text = readFileSync(file, 'utf8')
     const testPart = file.endsWith('_tests.rs') ? text : text.split('#[cfg(test)]').slice(1).join('')
     lines += nonBlank(testPart)
@@ -35,60 +43,55 @@ function rustTests() {
   return { lines, count }
 }
 
-function nuxtTests() {
-  const testFiles = files(`${NUXT_DIR}/tests`, '.ts')
-  const count = testFiles.reduce((sum, file) => sum + readFileSync(file, 'utf8').split('\n')
-    .filter(line => line.trimStart().startsWith('it(')).length, 0)
-  return { lines: scc(NUXT_DIR, ['tests']).code, count }
-}
-
-function cargoDependencies() {
+function cargoDependencies(root) {
   let section = ''
   let direct = 0
-  for (const line of readFileSync(`${REPO_DIR}/Cargo.toml`, 'utf8').split('\n')) {
+  for (const line of readFileSync(`${root}/Cargo.toml`, 'utf8').split('\n')) {
     if (line.startsWith('[')) section = line.trim()
     else if (['[dependencies]', '[dev-dependencies]'].includes(section) && line.includes('=')) direct++
   }
-  const total = readFileSync(`${REPO_DIR}/Cargo.lock`, 'utf8').split('\n').filter(line => line === '[[package]]').length - 1
+  const total = readFileSync(`${root}/Cargo.lock`, 'utf8').split('\n').filter(line => line === '[[package]]').length - 1
   return { direct, total }
 }
 
-function npmDependencies() {
-  const manifest = JSON.parse(readFileSync(`${NUXT_DIR}/package.json`, 'utf8'))
-  const lock = JSON.parse(readFileSync(`${NUXT_DIR}/package-lock.json`, 'utf8'))
+function rust(root) {
+  const code = scc(root, ['src'], 'components')
+  const tests = rustTests(root)
   return {
-    direct: Object.keys(manifest.dependencies).length + Object.keys(manifest.devDependencies).length,
-    total: Object.keys(lock.packages).filter(key => key.startsWith('node_modules/')).length,
+    codeLines: code.code - tests.lines,
+    codeFiles: code.files,
+    byLanguage: code.byLanguage,
+    testLines: tests.lines,
+    testCount: tests.count,
+    generatedLines: scc(root, ['src/components', 'assets/dx-components-theme.css']).code,
+    configLines: configLines(root, 'rust'),
+    dependencies: cargoDependencies(root),
   }
 }
 
-const configLines = (root, paths) => paths.reduce((sum, path) => sum + nonBlank(readFileSync(join(root, path), 'utf8')), 0)
-
-export function features() {
-  const rustCode = scc(REPO_DIR, ['src'], 'components')
-  const rustTestStats = rustTests()
-  const nuxtTestStats = nuxtTests()
+function nuxt(root) {
+  const code = scc(root, ['app', 'server', 'shared', 'scripts'], 'ui,migrations,assets')
+  const testCount = files(`${root}/tests`, '.ts').reduce((sum, file) => sum + readFileSync(file, 'utf8').split('\n')
+    .filter(line => line.trimStart().startsWith('it(')).length, 0)
+  const manifest = JSON.parse(readFileSync(`${root}/package.json`, 'utf8'))
+  const lock = JSON.parse(readFileSync(`${root}/package-lock.json`, 'utf8'))
   return {
-    rust: {
-      codeLines: rustCode.code - rustTestStats.lines,
-      codeFiles: rustCode.files,
-      byLanguage: rustCode.byLanguage,
-      testLines: rustTestStats.lines,
-      testCount: rustTestStats.count,
-      generatedLines: scc(REPO_DIR, ['src/components', 'assets/dx-components-theme.css']).code,
-      configLines: configLines(REPO_DIR, ['Cargo.toml', 'Dioxus.toml', 'Dockerfile', 'compose.yaml', 'clippy.toml', 'tailwind.css', 'scripts/check.sh', '.devcontainer/devcontainer.json']),
-      dependencies: cargoDependencies(),
-    },
-    nuxt: {
-      ...(() => {
-        const code = scc(NUXT_DIR, ['app', 'server', 'shared', 'scripts'], 'ui,migrations,assets')
-        return { codeLines: code.code, codeFiles: code.files, byLanguage: code.byLanguage }
-      })(),
-      testLines: nuxtTestStats.lines,
-      testCount: nuxtTestStats.count,
-      generatedLines: scc(NUXT_DIR, ['app/components/ui', 'server/db/migrations', 'app/assets/css']).code,
-      configLines: configLines(NUXT_DIR, ['package.json', 'nuxt.config.ts', 'Dockerfile', 'compose.yaml', 'drizzle.config.ts', 'eslint.config.mjs', 'vitest.config.ts', 'components.json']),
-      dependencies: npmDependencies(),
+    codeLines: code.code,
+    codeFiles: code.files,
+    byLanguage: code.byLanguage,
+    testLines: scc(root, ['tests']).code,
+    testCount,
+    generatedLines: scc(root, ['app/components/ui', 'server/db/migrations', 'app/assets/css']).code,
+    configLines: configLines(root, 'nuxt'),
+    dependencies: {
+      direct: Object.keys(manifest.dependencies).length + Object.keys(manifest.devDependencies).length,
+      total: Object.keys(lock.packages).filter(key => key.startsWith('node_modules/')).length,
     },
   }
+}
+
+const KINDS = { rust, nuxt }
+
+export function features() {
+  return Object.fromEntries(FEATURES.map(variant => [variant, KINDS[VARIANTS[variant].kind](checkout(variant))]))
 }

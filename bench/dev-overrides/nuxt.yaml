@@ -1,6 +1,0 @@
-services:
-  app:
-    ports: !override
-      - "9092:3000"
-    environment:
-      NUXT_SITE_ORIGIN: http://localhost:9092

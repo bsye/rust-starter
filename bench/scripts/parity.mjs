@@ -1,24 +1,25 @@
 import { randomUUID } from 'node:crypto'
 import { REQUEST_TIMEOUT_MS } from './lib.mjs'
+import { VARIANTS } from './variants.mjs'
 
-export const APPS = {
+const KINDS = {
   rust: {
-    url: 'http://localhost:9081',
-    origin: 'http://rust:8080',
     cookie: 'session',
     credentials: credentials => ({ credentials }),
     note: input => ({ input }),
     fields: json => json?.data?.Invalid,
   },
   nuxt: {
-    url: 'http://localhost:9082',
-    origin: 'http://nuxt:8080',
     cookie: 'nuxt-session',
     credentials: credentials => credentials,
     note: input => input,
     fields: json => json?.data?.fields,
   },
 }
+
+const app = (variant, url, origin) => ({ ...KINDS[VARIANTS[variant].kind], url, origin })
+export const prodApp = variant => app(variant, `http://localhost:${VARIANTS[variant].prodPort}`, `http://${variant}:8080`)
+export const devApp = variant => app(variant, `http://localhost:${VARIANTS[variant].devPort}`, `http://localhost:${VARIANTS[variant].devPort}`)
 
 export function client(app, cookie) {
   return async (method, path, body, { origin = true } = {}) => {
