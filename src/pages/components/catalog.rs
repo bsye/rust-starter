@@ -10,16 +10,18 @@ pub enum Category {
     Feedback,
     Disclosure,
     DataDisplay,
+    Chat,
 }
 
 impl Category {
-    pub const ALL: [Category; 6] = [
+    pub const ALL: [Category; 7] = [
         Category::Forms,
         Category::Navigation,
         Category::Overlays,
         Category::Feedback,
         Category::Disclosure,
         Category::DataDisplay,
+        Category::Chat,
     ];
 
     pub fn label(self) -> &'static str {
@@ -30,6 +32,7 @@ impl Category {
             Category::Feedback => "Feedback",
             Category::Disclosure => "Disclosure",
             Category::DataDisplay => "Data display",
+            Category::Chat => "Chat",
         }
     }
 
@@ -41,6 +44,7 @@ impl Category {
             Category::Feedback => "feedback",
             Category::Disclosure => "disclosure",
             Category::DataDisplay => "data-display",
+            Category::Chat => "chat",
         }
     }
 }
@@ -78,6 +82,7 @@ catalog! {
     select: "Select", Forms, false;
     combobox: "Combobox", Forms, false;
     slider: "Slider", Forms, false;
+    input_group: "Input group", Forms, false;
     date_picker: "Date picker", Forms, false;
     calendar: "Calendar", Forms, true;
     color_picker: "Color picker", Forms, true;
@@ -99,6 +104,7 @@ catalog! {
     progress: "Progress", Feedback, false;
     skeleton: "Skeleton", Feedback, false;
     badge: "Badge", Feedback, false;
+    spinner: "Spinner", Feedback, false;
     accordion: "Accordion", Disclosure, false;
     collapsible: "Collapsible", Disclosure, false;
     card: "Card", DataDisplay, false;
@@ -109,6 +115,12 @@ catalog! {
     scroll_area: "Scroll area", DataDisplay, false;
     drag_and_drop_list: "Drag and drop list", DataDisplay, true;
     virtual_list: "Virtual list", DataDisplay, true;
+    message: "Message", Chat, false;
+    bubble: "Bubble", Chat, false;
+    marker: "Marker", Chat, false;
+    attachment: "Attachment", Chat, false;
+    message_scroller: "Message scroller", Chat, true;
+    direction: "Direction", Chat, false;
 }
 
 pub fn in_category(category: Category) -> impl Iterator<Item = &'static Entry> {

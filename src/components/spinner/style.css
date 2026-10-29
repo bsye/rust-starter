@@ -1,0 +1,18 @@
+.dx-spinner {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  animation: dx-spinner-spin 1s linear infinite;
+}
+
+@keyframes dx-spinner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dx-spinner {
+    animation-duration: 3s;
+  }
+}

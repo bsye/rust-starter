@@ -1828,6 +1828,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "dioxus-registry-primitives"
+version = "0.1.0"
+source = "git+https://github.com/bsye/dioxus-registry?rev=87a6d26ddaeb3ef4b788dafd44fdc3525d9498f1#87a6d26ddaeb3ef4b788dafd44fdc3525d9498f1"
+dependencies = [
+ "dioxus",
+]
+
+[[package]]
 name = "dioxus-router"
 version = "0.8.0-alpha.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4315,6 +4323,7 @@ dependencies = [
  "dioxus",
  "dioxus-icons",
  "dioxus-primitives",
+ "dioxus-registry-primitives",
  "dioxus-ssr",
  "num-format",
  "palette",

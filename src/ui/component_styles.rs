@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const COMPONENT_STYLES: [Asset; 41] = [
+const COMPONENT_STYLES: [Asset; 48] = [
     asset!(
         "/src/components/accordion/style.css",
         AssetOptions::css_module()
@@ -14,11 +14,19 @@ const COMPONENT_STYLES: [Asset; 41] = [
         AssetOptions::css_module()
     ),
     asset!(
+        "/src/components/attachment/style.css",
+        AssetOptions::css_module()
+    ),
+    asset!(
         "/src/components/avatar/style.css",
         AssetOptions::css_module()
     ),
     asset!(
         "/src/components/badge/style.css",
+        AssetOptions::css_module()
+    ),
+    asset!(
+        "/src/components/bubble/style.css",
         AssetOptions::css_module()
     ),
     asset!(
@@ -74,13 +82,29 @@ const COMPONENT_STYLES: [Asset; 41] = [
         "/src/components/input/style.css",
         AssetOptions::css_module()
     ),
+    asset!(
+        "/src/components/input_group/style.css",
+        AssetOptions::css_module()
+    ),
     asset!("/src/components/item/style.css", AssetOptions::css_module()),
     asset!(
         "/src/components/label/style.css",
         AssetOptions::css_module()
     ),
     asset!(
+        "/src/components/marker/style.css",
+        AssetOptions::css_module()
+    ),
+    asset!(
         "/src/components/menubar/style.css",
+        AssetOptions::css_module()
+    ),
+    asset!(
+        "/src/components/message/style.css",
+        AssetOptions::css_module()
+    ),
+    asset!(
+        "/src/components/message_scroller/style.css",
         AssetOptions::css_module()
     ),
     asset!(
@@ -125,6 +149,10 @@ const COMPONENT_STYLES: [Asset; 41] = [
     ),
     asset!(
         "/src/components/slider/style.css",
+        AssetOptions::css_module()
+    ),
+    asset!(
+        "/src/components/spinner/style.css",
         AssetOptions::css_module()
     ),
     asset!(

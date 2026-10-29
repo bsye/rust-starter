@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 
 mod auth;
+mod chat;
 mod login;
 mod sidebar;
 mod signup;
@@ -11,14 +12,16 @@ pub enum Category {
     Sidebar,
     Login,
     Signup,
+    Chat,
 }
 
 impl Category {
-    pub const ALL: [Category; 4] = [
+    pub const ALL: [Category; 5] = [
         Category::Featured,
         Category::Sidebar,
         Category::Login,
         Category::Signup,
+        Category::Chat,
     ];
 
     pub fn label(self) -> &'static str {
@@ -27,6 +30,7 @@ impl Category {
             Category::Sidebar => "Sidebar",
             Category::Login => "Login",
             Category::Signup => "Signup",
+            Category::Chat => "Chat",
         }
     }
 
@@ -36,6 +40,7 @@ impl Category {
             Category::Sidebar => "sidebar",
             Category::Login => "login",
             Category::Signup => "signup",
+            Category::Chat => "chat",
         }
     }
 
@@ -92,6 +97,7 @@ blocks! {
     "signup-03": signup::signup_03::Signup03, Signup, false, "A sign-up page with a muted background.";
     "signup-04": signup::signup_04::Signup04, Signup, false, "A sign-up page with a form and a cover.";
     "signup-05": signup::signup_05::Signup05, Signup, false, "A sign-up page with social providers.";
+    "chat-01": chat::chat_01::Chat01, Chat, true, "A chat thread with attachments and a composer.";
 }
 
 pub const SHOWCASE: &str = "sidebar-07";

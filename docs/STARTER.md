@@ -2,6 +2,23 @@
 
 A containerised Dioxus fullstack scaffold for web apps, built in small phases so each one teaches a slice of Rust.
 
+## What we built
+
+| Step | Result |
+|---|---|
+| Research | Compared Rust options with a Nuxt or Next feel (Leptos, Dioxus, Topcoat, Loco, Tuono, rari) and picked Dioxus 0.7, later moved to 0.8 alpha for hot-patching |
+| [Plan](#phases) | Five phases with acceptance criteria, written before any code |
+| 1. Container | Docker dev setup with hot reload, a VS Code dev container and a check script; nothing but Docker on the host |
+| 2. Routing | Route enum, shared layout, real 404 status, stock shadcn-style components, light and dark theme |
+| 3. Database | Postgres with SeaORM, migrations behind an advisory lock, paginated notes with totals, validated forms |
+| 4. Auth | Accounts with Argon2id, server-side sessions, an origin check, owner-scoped queries, soft delete and an audit trail |
+| 5. Production | Slim non-root image with pre-compressed assets and a healthcheck |
+| Faster dev loop | The mold linker with lighter debug info, and Dioxus 0.8 alpha with Rust hot-patching in the server and browser ([why](design-notes.md#hot-patching)); 0.7 without them stays on [`dioxus-0.7`](https://github.com/bsye/rust-starter/tree/dioxus-0.7) |
+| [Components](COMPONENTS.md) | `/components` shows every installed Dioxus component in shadcn's style, live; the home page links to it and to the blocks |
+| [Blocks](BLOCKS.md) | `/blocks` shows shadcn-style login, signup, sidebar and chat pages built from the stock components, each live in a frame next to its source |
+| [Chat](CHAT.md) | shadcn's chat components (message, bubble, marker, attachment, message scroller) ported to Dioxus in our public registry, [bsye/dioxus-registry](https://github.com/bsye/dioxus-registry), and installed here with `scripts/components.sh` |
+| [Benchmark](../bench/REPORT.md) | The same app built the idiomatic Nuxt way in [`bench/nuxt`](../bench/nuxt), measured on features, the developer loop and production by one script ([method](BENCHMARK.md)) |
+
 ## Goals
 
 - `docker compose up` gives a running app with hot reload and Postgres. Nothing installed on the Mac but Docker.
