@@ -94,6 +94,8 @@ blocks! {
     "signup-05": signup::signup_05::Signup05, Signup, false, "A sign-up page with social providers.";
 }
 
+pub const SHOWCASE: &str = "sidebar-07";
+
 pub fn in_category(category: Category) -> impl Iterator<Item = &'static Block> {
     BLOCKS.iter().filter(move |block| {
         block.category == category || (category == Category::Featured && block.featured)
@@ -106,7 +108,7 @@ pub fn find(id: &str) -> Option<&'static Block> {
 
 #[cfg(test)]
 mod tests {
-    use super::{BLOCKS, Category, find, in_category};
+    use super::{BLOCKS, Category, SHOWCASE, find, in_category};
 
     #[test]
     fn block_ids_are_unique() {
@@ -157,7 +159,7 @@ mod tests {
 
     #[test]
     fn unknown_blocks_are_not_found() {
-        assert!(find("login-01").is_some());
+        assert!(find(SHOWCASE).is_some());
         assert!(find("missing").is_none());
     }
 }

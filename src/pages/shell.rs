@@ -15,10 +15,17 @@ pub fn Shell() -> Element {
         header { class: "border-b border-border",
             nav { class: "mx-auto flex h-14 max-w-5xl items-center gap-6 px-4",
                 Link { class: "font-semibold", to: Route::Home {}, "{APP_NAME}" }
-                NavLink {
-                    to: Route::Blocks { category: String::new() },
-                    active: route.in_blocks(),
-                    "Blocks"
+                div { class: "hidden items-center gap-6 sm:flex",
+                    NavLink {
+                        to: Route::Components {},
+                        active: route == Route::Components {},
+                        "Components"
+                    }
+                    NavLink {
+                        to: Route::Blocks { category: String::new() },
+                        active: route.in_blocks(),
+                        "Blocks"
+                    }
                 }
                 if user.is_some() {
                     NavLink { to: Route::Notes { page: 1 }, active: route.in_notes(), "Notes" }

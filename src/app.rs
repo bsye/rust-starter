@@ -3,8 +3,8 @@ use dioxus::prelude::*;
 use crate::analytics::use_analytics;
 use crate::hooks::use_current_user_provider;
 use crate::pages::{
-    BlockView, Blocks, EditNote, Home, NewNote, NotFound, NoteDetail, Notes, RequireUser, Shell,
-    SignIn, SignUp,
+    BlockView, Blocks, Components, EditNote, Home, NewNote, NotFound, NoteDetail, Notes,
+    RequireUser, Shell, SignIn, SignUp,
 };
 use crate::ui::ComponentStyles;
 
@@ -20,6 +20,8 @@ pub enum Route {
     #[layout(Shell)]
     #[route("/")]
     Home {},
+    #[route("/components")]
+    Components {},
     #[route("/blocks?:category")]
     Blocks { category: String },
     #[route("/sign-in")]
@@ -89,6 +91,7 @@ mod tests {
         assert_eq!(parse("/notes/42/edit"), Route::EditNote { id: 42 });
         assert_eq!(parse("/sign-in"), Route::SignIn {});
         assert_eq!(parse("/sign-up"), Route::SignUp {});
+        assert_eq!(parse("/components"), Route::Components {});
         assert_eq!(
             parse("/blocks?category=login"),
             Route::Blocks {

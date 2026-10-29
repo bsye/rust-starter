@@ -19,7 +19,7 @@ Their components come from `registryDependencies` in its `_registry.ts`.
 In the starter today:
 
 - 43 components are installed on the `components` branch.
-- `/demos/sidebar` rendered a whole-page demo inside an `iframe` on the home page; it is now the `sidebar-07` block.
+- `/demos/sidebar` rendered a whole-page demo inside an `iframe` on the component showcase; it is now the `sidebar-07` block.
 - `src/ui/field.rs` is a small label, input and error wrapper. It is not shadcn's `Field` set (group, label,
   description, separator).
 - `/sign-in` and `/sign-up` have real forms in `src/pages/auth.rs`.
@@ -40,7 +40,7 @@ In the starter today:
 
 | Question | Answer |
 |---|---|
-| Where the page lives | A new `/blocks` page with a header link; the home page stays the component showcase |
+| Where the page lives | A new `/blocks` page with a header link. The component showcase moved to `/components`, and the home page links to both |
 | Real auth pages | They keep their current look, because the benchmark runs Lighthouse on `/sign-in` against the Nuxt twin. They share the blocks' form code (`ui::credentials`), so the auth form exists once |
 | Fields shadcn shows that need new backend work | Left out: full name, confirm password, forgot password, terms links, email-only sign-in |
 | Cover panel (login-02, login-04, signup-02, signup-04) | A tinted panel with the app icon; no image file |

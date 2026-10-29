@@ -120,9 +120,9 @@ Dioxus.
 
 ## Component showcase
 
-The home page shows every installed component; the plan is [COMPONENTS.md](COMPONENTS.md).
+`/components` shows every installed component; the plan is [COMPONENTS.md](COMPONENTS.md).
 
-- **One catalog.** `src/pages/home/catalog.rs` lists each component once (id, name, category, width). A macro turns
+- **One catalog.** `src/pages/components/catalog.rs` lists each component once (id, name, category, width). A macro turns
   each entry into a real component call, so demos keep their own scope and still hot-patch. A test fails when a
   component in `src/components/` is missing from the catalog or listed twice.
 - **Demos come from upstream's preview app** (MIT or Apache-2.0), with imports pointed at our components, copy in
@@ -132,6 +132,26 @@ The home page shows every installed component; the plan is [COMPONENTS.md](COMPO
 - **Cards are wrapped, not styled.** The stock `Card` drops a `class` it is given, so a wrapper cell carries the grid
   span, `min-w-0` and the anchor id; `grid-cols-1` lets a wide demo scroll inside its card instead of widening the
   page on a phone.
+
+## Home
+
+`/` is a short hero and two cards, Blocks and Components, each with a live preview; the whole card links to its page.
+
+- **Previews render inline, not in a frame.** The Blocks card renders the `SHOWCASE` block (`sidebar-07`) from the
+  block catalog in a box one screen high and two and a half times the card's width, scaled to 40% into a preview `40svh`
+  high, so the whole page fits on any screen. On a phone the block shows its phone layout, where the sidebar is a closed sheet. A frame would boot the whole app a second time (120 MB of wasm
+  in dev) on the main thread the page shares with it, which would slow the hot-patch timing the benchmark takes on
+  this page. The scaled box creates a containing block, so the sidebar's `position: fixed` stays inside the card.
+- **The Components card is a sampler** of stock components (button, badge, input, switch, avatar, slider, progress)
+  with fixed values.
+- **Previews are `inert`.** The whole card is the target, through a stretched link (`after:absolute after:inset-0` on
+  the title). A link cannot contain inputs or buttons, and `inert` keeps the preview out of the tab order, the
+  accessibility tree and hit-testing, so a click anywhere on the card reaches the link.
+- **Phone header.** Below `sm` the header hides the Components and Blocks links, which the home cards carry, so it
+  fits on one line next to Notes and the account button.
+- **The heading stays a literal.** `bench/scripts/devloop.mjs` times a hot patch by editing the first `Rust starter`
+  in `src/pages/home.rs`, so the hero spells it out instead of using `APP_NAME`.
+- **Known side effect.** The stock sidebar listens for Ctrl+B on the window, so the shortcut collapses the preview.
 
 ## Blocks
 

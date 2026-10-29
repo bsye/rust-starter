@@ -1,14 +1,14 @@
 # Plan: expand the Dioxus component library
 
-Goal: every [shadcn/ui](https://ui.shadcn.com/docs/components) component exists for Dioxus, and the starter's home page
-shows all of them. What [dioxus-components](https://github.com/DioxusLabs/components) lacks we build in its format, in
+Goal: every [shadcn/ui](https://ui.shadcn.com/docs/components) component exists for Dioxus, and the starter's `/components`
+page shows all of them. What [dioxus-components](https://github.com/DioxusLabs/components) lacks we build in its format, in
 our own registry repo, so anyone can install it with `dx components add --git`. Status: phase 1 done; phase 2 next.
 
 ## Decisions
 
 | Question | Answer |
 |---|---|
-| Home page | The showcase replaces it |
+| Where the showcase lives | `/components`, linked from the header; the home page links to it and to the blocks |
 | Chat components | In scope, all six |
 | Charts | Built in Rust; no prebuilt Rust charts exist for Dioxus |
 | Dioxus-only components | On the page too |
@@ -51,7 +51,7 @@ commit, so adding a component stays one command.
 
 ## Acceptance criteria
 
-- GIVEN a visitor on `/`, WHEN the page loads, THEN every component appears once, in sections by category (forms,
+- GIVEN a visitor on `/components`, WHEN the page loads, THEN every component appears once, in sections by category (forms,
   overlays, navigation, data display, feedback, layout, charts, chat), with a contents list that jumps to each section.
 - GIVEN light or dark theme, THEN every component uses the theme's tokens only, and both themes look right.
 - GIVEN a phone-width screen, THEN the page has no horizontal scroll and every component stays usable.
@@ -66,7 +66,7 @@ commit, so adding a component stays one command.
 ## Edge cases
 
 - **The benchmark edits the home heading.** `bench/scripts/devloop.mjs` changes "Rust starter" in
-  `src/pages/home.rs`. Keep that heading on the showcase, or move the metric in the same change.
+  `src/pages/home.rs`. Keep that heading on the home page, or move the metric in the same change.
 - **One wasm bundle for every page.** Every component added grows the sign-in and notes pages too. Measure wasm size
   and Lighthouse before and after.
 - **Generated code stays generated.** `src/components/` is `dx` output; every new `style.css` goes into
@@ -76,7 +76,7 @@ commit, so adding a component stays one command.
 
 | # | Phase | Delivers |
 |---|---|---|
-| 1 | Upstream set | The 35 components from the 0.8 registry we did not have (all but the empty `form`), installed; the home page with sections and contents |
+| 1 | Upstream set | The 35 components from the 0.8 registry we did not have (all but the empty `form`), installed; the showcase with sections and contents |
 | 2 | Registry repo and small gaps | The registry repo with checks, then alert, breadcrumb, button group, empty, field, input group, kbd, native select, spinner |
 | 3 | Large gaps | Carousel, command, drawer, navigation menu, resizable; table and input OTP from their open PRs |
 | 4 | Charts | Area, bar, line, pie and radial charts in SVG, matching shadcn's chart examples |
