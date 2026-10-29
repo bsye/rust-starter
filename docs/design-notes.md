@@ -20,6 +20,7 @@ browser, keeping their state.
 |---|---|---|
 | App code in the binary | `dx` patches the binary crate only; edits to code in the library were never applied | `src/main.rs` holds the module tree, `src/lib.rs` only the generated components |
 | Nightly in the image | the 0.8 dev server runs `cargo +nightly rustc --unit-graph` at startup; without nightly, rustup downloads it at runtime with no timeout, and a stalled download hung the dev server | `Dockerfile` base stage |
+| A restart after structural edits | a patch swaps functions in the running server and the open tab, but every page load fetches the base wasm from the last full build; after adding routes and modules, a reload ran that old code against the patched server's HTML and panicked with `HydrationMismatch` | `docker compose restart app`, then reload |
 | Signed-in user at the root | a patch remounts every component whose code changed; a remounted `use_server_cached` in the browser has no page data, so it called the server-only `request_user` and crashed the page | `use_current_user_provider` and `use_analytics` in `App`, the root, which is never remounted |
 
 A second binary would need the app code in a library to share it, so seeding is a subcommand of the main binary:
@@ -119,18 +120,67 @@ Dioxus.
 
 ## Component showcase
 
-The home page shows every installed component; the plan is [COMPONENTS.md](COMPONENTS.md).
+`/components` shows every installed component; the plan is [COMPONENTS.md](COMPONENTS.md).
 
-- **One catalog.** `src/pages/home/catalog.rs` lists each component once (id, name, category, width). A macro turns
+- **One catalog.** `src/pages/components/catalog.rs` lists each component once (id, name, category, width). A macro turns
   each entry into a real component call, so demos keep their own scope and still hot-patch. A test fails when a
   component in `src/components/` is missing from the catalog or listed twice.
 - **Demos come from upstream's preview app** (MIT or Apache-2.0), with imports pointed at our components, copy in
   shadcn's style, initials instead of remote avatar images, and no debug logging.
-- **The sidebar runs in an iframe.** It is an app shell (`position: fixed`, `100svh`), so it gets its own route,
-  `/demos/sidebar`, outside the layout, and the card frames it, as shadcn previews blocks.
+- **The sidebar runs in an iframe.** It is an app shell (`position: fixed`, `100svh`), so the card frames the
+  `sidebar-07` block at `/blocks/sidebar-07`, outside the layout, as shadcn previews blocks.
 - **Cards are wrapped, not styled.** The stock `Card` drops a `class` it is given, so a wrapper cell carries the grid
   span, `min-w-0` and the anchor id; `grid-cols-1` lets a wide demo scroll inside its card instead of widening the
   page on a phone.
+
+## Home
+
+`/` is a short hero and two cards, Blocks and Components, each with a live preview; the whole card links to its page.
+
+- **Previews render inline, not in a frame.** The Blocks card renders the `SHOWCASE` block (`sidebar-07`) from the
+  block catalog in a box one screen high and two and a half times the card's width, scaled to 40% into a preview `40svh`
+  high, so the whole page fits on any screen. On a phone the block shows its phone layout, where the sidebar is a closed sheet. A frame would boot the whole app a second time (120 MB of wasm
+  in dev) on the main thread the page shares with it, which would slow the hot-patch timing the benchmark takes on
+  this page. The scaled box creates a containing block, so the sidebar's `position: fixed` stays inside the card.
+- **The Components card is a sampler** of stock components (button, badge, input, switch, avatar, slider, progress)
+  with fixed values.
+- **Previews are `inert`.** The whole card is the target, through a stretched link (`after:absolute after:inset-0` on
+  the title). A link cannot contain inputs or buttons, and `inert` keeps the preview out of the tab order, the
+  accessibility tree and hit-testing, so a click anywhere on the card reaches the link.
+- **Phone header.** Below `sm` the header hides the Components and Blocks links, which the home cards carry, so it
+  fits on one line next to Notes and the account button.
+- **The heading stays a literal.** `bench/scripts/devloop.mjs` times a hot patch by editing the first `Rust starter`
+  in `src/pages/home.rs`, so the hero spells it out instead of using `APP_NAME`.
+- **Known side effect.** The stock sidebar listens for Ctrl+B on the window, so the shortcut collapses the preview.
+
+## Blocks
+
+`/blocks` shows whole pages built only from our components, like [shadcn's blocks](https://ui.shadcn.com/blocks); the
+plan and status are in [BLOCKS.md](BLOCKS.md).
+
+- **One catalog.** `src/blocks/mod.rs` lists each block once (id, description, category, featured) and reads its
+  source with `include_str!`, so the Code tab always shows the file that renders the preview. Tests check that ids are
+  unique, every category has blocks and each block's source is its own file.
+- **Frames, lazy.** Each block is a full page at `/blocks/<id>`, outside the layout. The gallery frames it with
+  `loading="lazy"` and renders only the selected category, because every frame boots the whole app: 120 MB of wasm
+  in dev. A page that loads mid-rebuild has no CSS, so every frame is in view at once and Chrome stalls; reload it.
+- **Real logic.** Login and signup blocks are layouts around `ui::credentials` (`AuthForm`, `EmailField`,
+  `PasswordField`, `SubmitButton`, `SwitchPrompt`), the same form `/sign-in` and `/sign-up` use, so signing in inside a
+  frame really signs in. The old one-piece `ui::Field` became shadcn's field set, and the notes form uses it too.
+- **Nothing fake.** Full name, confirm password, forgot password, terms links and email-only sign-in need backend work
+  we do not have, so the blocks leave them out (login-05 keeps the password). Social sign-in and the newsletter button
+  are shown disabled, with a title saying they are not set up.
+- **The real auth pages keep their look.** The benchmark runs Lighthouse on `/sign-in` against its Nuxt twin, so
+  restyling that page would move a measured number.
+- **Sidebar parts are shared.** `src/blocks/sidebar/parts/` holds the sample data (fictional teams, no people), the
+  inset header and the menus. The team switcher, main nav, projects and user menu follow upstream's sidebar preview,
+  a Dioxus port of shadcn's sidebar-07; the sidebar's own `dx-sidebar-dropdown-menu*` classes open its menus to the side.
+- **A right sidebar comes first in the markup.** The wrapper flips the row with `row-reverse` when the sidebar is on
+  the right, so placing the sidebar after the inset put it back on the left.
+- **Tokens.** `tailwind.css` maps `surface`, `card`, `primary` and `primary-foreground` onto existing theme variables
+  for muted panels, separators on cards and the logo mark.
+- **Stock limits seen.** The avatar fallback uses a 1.5rem font and the page background at every size, so initials look
+  large in sidebars. The card ignores a `class` and the input sets its own padding, so neither is overridden.
 
 ## 404 status
 

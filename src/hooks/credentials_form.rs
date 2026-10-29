@@ -35,6 +35,10 @@ pub fn use_credentials_form(mode: CredentialsMode) -> CredentialsForm {
 }
 
 impl CredentialsForm {
+    pub fn mode(&self) -> CredentialsMode {
+        self.mode
+    }
+
     pub fn error(&self, field: &str) -> Option<String> {
         self.errors.read().get(field).map(str::to_string)
     }

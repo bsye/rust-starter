@@ -3,7 +3,7 @@ use dioxus_icons::lucide::Save;
 
 use crate::api::{FieldErrors, Note, NoteInput};
 use crate::hooks::use_note_form;
-use crate::ui::Field;
+use crate::ui::{Field, FieldError, FieldLabel};
 use rust_starter::components::{button::Button, input::Input, textarea::Textarea};
 
 #[component]
@@ -18,7 +18,8 @@ pub fn NoteFormView(existing: Option<Note>) -> Element {
                 event.prevent_default();
                 note_form.submit().await;
             },
-            Field { label: "Title", id: "title", error: title_error.clone(),
+            Field {
+                FieldLabel { html_for: "title", "Title" }
                 Input {
                     id: "title",
                     name: "title",
@@ -27,8 +28,10 @@ pub fn NoteFormView(existing: Option<Note>) -> Element {
                     aria_describedby: "title-error",
                     oninput: move |event: FormEvent| note_form.title.set(event.value()),
                 }
+                FieldError { id: "title-error", message: title_error }
             }
-            Field { label: "Body", id: "body", error: body_error.clone(),
+            Field {
+                FieldLabel { html_for: "body", "Body" }
                 Textarea {
                     id: "body",
                     name: "body",
@@ -38,6 +41,7 @@ pub fn NoteFormView(existing: Option<Note>) -> Element {
                     aria_describedby: "body-error",
                     oninput: move |event: FormEvent| note_form.body.set(event.value()),
                 }
+                FieldError { id: "body-error", message: body_error }
             }
             if let Some(message) = note_form.error(FieldErrors::FORM) {
                 p { class: "text-sm text-destructive", role: "alert", "{message}" }

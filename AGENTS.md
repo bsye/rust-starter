@@ -184,6 +184,8 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 - After adding a component, add the new `style.css` to `COMPONENT_STYLES` in `src/ui/component_styles.rs` (a test fails
   otherwise).
 - Note queries start from `scoped(actor)` in `src/server/notes.rs`; new resources follow the same pattern.
+- After adding a route, module or file, run `docker compose restart app` before reloading: a reload runs the old
+  base wasm against the hot-patched server and panics with `HydrationMismatch`.
 - App code lives in the binary (`src/main.rs`), because `dx` hot-patches only the binary crate; `src/lib.rs` holds only
   `src/components/`.
 - Every wait in a script or background job has a deadline (per request and overall) and prints a failure instead of

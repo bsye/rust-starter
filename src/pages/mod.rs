@@ -1,4 +1,6 @@
 mod auth;
+mod blocks;
+mod components;
 mod home;
 mod not_found;
 mod notes;
@@ -6,7 +8,9 @@ mod require_user;
 mod shell;
 
 pub use auth::{SignIn, SignUp};
-pub use home::{Home, SidebarDemo};
+pub use blocks::{BlockView, Blocks};
+pub use components::Components;
+pub use home::Home;
 pub use not_found::NotFound;
 pub use notes::{EditNote, NewNote, NoteDetail, Notes};
 pub use require_user::RequireUser;

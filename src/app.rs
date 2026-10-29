@@ -3,21 +3,27 @@ use dioxus::prelude::*;
 use crate::analytics::use_analytics;
 use crate::hooks::use_current_user_provider;
 use crate::pages::{
-    EditNote, Home, NewNote, NotFound, NoteDetail, Notes, RequireUser, Shell, SidebarDemo, SignIn,
-    SignUp,
+    BlockView, Blocks, Components, EditNote, Home, NewNote, NotFound, NoteDetail, Notes,
+    RequireUser, Shell, SignIn, SignUp,
 };
 use crate::ui::ComponentStyles;
+
+pub const APP_NAME: &str = "Rust starter";
 
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
 #[derive(Debug, Clone, PartialEq, Routable)]
 pub enum Route {
-    #[route("/demos/sidebar")]
-    SidebarDemo {},
+    #[route("/blocks/:id")]
+    BlockView { id: String },
     #[layout(Shell)]
     #[route("/")]
     Home {},
+    #[route("/components")]
+    Components {},
+    #[route("/blocks?:category")]
+    Blocks { category: String },
     #[route("/sign-in")]
     SignIn {},
     #[route("/sign-up")]
@@ -39,6 +45,10 @@ pub enum Route {
 impl Route {
     pub fn is_auth(&self) -> bool {
         matches!(self, Route::SignIn {} | Route::SignUp {})
+    }
+
+    pub fn in_blocks(&self) -> bool {
+        matches!(self, Route::Blocks { .. })
     }
 
     pub fn in_notes(&self) -> bool {
@@ -81,7 +91,29 @@ mod tests {
         assert_eq!(parse("/notes/42/edit"), Route::EditNote { id: 42 });
         assert_eq!(parse("/sign-in"), Route::SignIn {});
         assert_eq!(parse("/sign-up"), Route::SignUp {});
-        assert_eq!(parse("/demos/sidebar"), Route::SidebarDemo {});
+        assert_eq!(parse("/components"), Route::Components {});
+        assert_eq!(
+            parse("/blocks?category=login"),
+            Route::Blocks {
+                category: "login".to_string()
+            }
+        );
+        assert_eq!(
+            parse("/blocks/login-01"),
+            Route::BlockView {
+                id: "login-01".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn blocks_without_a_category_have_an_empty_one() {
+        assert_eq!(
+            parse("/blocks"),
+            Route::Blocks {
+                category: String::new()
+            }
+        );
     }
 
     #[test]
@@ -100,6 +132,13 @@ mod tests {
         assert!(parse("/sign-in").is_auth());
         assert!(parse("/sign-up").is_auth());
         assert!(!parse("/notes").is_auth());
+    }
+
+    #[test]
+    fn every_blocks_tab_is_in_the_blocks_section() {
+        assert!(parse("/blocks").in_blocks());
+        assert!(parse("/blocks?category=signup").in_blocks());
+        assert!(!parse("/").in_blocks());
     }
 
     #[test]
