@@ -12,7 +12,6 @@ mod catalog;
 mod demos;
 
 use catalog::Category;
-pub use demos::sidebar::SidebarDemo;
 
 #[component]
 pub fn Home() -> Element {

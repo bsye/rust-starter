@@ -48,6 +48,7 @@ docker run -p 8080:8080 -e DATABASE_URL=postgres://... -e PUBLIC_URL=https://you
 | 4. Auth | Accounts with Argon2id, server-side sessions, an origin check, owner-scoped queries, soft delete and an audit trail |
 | 5. Production | Slim non-root image with pre-compressed assets and a healthcheck |
 | Faster dev loop | The mold linker with lighter debug info, and Dioxus 0.8 alpha with Rust hot-patching in the server and browser ([why](docs/design-notes.md#hot-patching)); 0.7 without them stays on [`dioxus-0.7`](https://github.com/bsye/rust-starter/tree/dioxus-0.7) |
+| [Blocks](docs/BLOCKS.md) | `/blocks` shows shadcn-style login, signup and sidebar pages built from the stock components, each live in a frame next to its source |
 | [Benchmark](bench/REPORT.md) | The same app built the idiomatic Nuxt way in [`bench/nuxt`](bench/nuxt), measured on features, the developer loop and production by one script ([method](docs/BENCHMARK.md)) |
 
 Learning Rust was part of the goal: [docs/rust-notes.md](docs/rust-notes.md) maps every Rust concept each phase used to

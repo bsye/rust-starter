@@ -1,6 +1,7 @@
 mod analytics;
 mod api;
 mod app;
+mod blocks;
 mod hooks;
 mod pages;
 #[cfg(feature = "server")]

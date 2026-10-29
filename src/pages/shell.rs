@@ -1,13 +1,10 @@
 use dioxus::prelude::*;
 use dioxus_icons::lucide::{LogIn, LogOut};
 
-use crate::app::Route;
+use crate::app::{APP_NAME, Route};
 use crate::hooks::{use_current_user, use_sign_out};
-use crate::ui::ButtonLink;
+use crate::ui::{ButtonLink, NavLink};
 use rust_starter::components::button::{Button, ButtonVariant};
-
-const NAV_LINK: &str =
-    "text-muted transition-colors hover:text-foreground data-[active=true]:text-foreground";
 
 #[component]
 pub fn Shell() -> Element {
@@ -17,14 +14,14 @@ pub fn Shell() -> Element {
     rsx! {
         header { class: "border-b border-border",
             nav { class: "mx-auto flex h-14 max-w-5xl items-center gap-6 px-4",
-                Link { class: "font-semibold", to: Route::Home {}, "Rust starter" }
+                Link { class: "font-semibold", to: Route::Home {}, "{APP_NAME}" }
+                NavLink {
+                    to: Route::Blocks { category: String::new() },
+                    active: route.in_blocks(),
+                    "Blocks"
+                }
                 if user.is_some() {
-                    Link {
-                        class: NAV_LINK,
-                        "data-active": route.in_notes(),
-                        to: Route::Notes { page: 1 },
-                        "Notes"
-                    }
+                    NavLink { to: Route::Notes { page: 1 }, active: route.in_notes(), "Notes" }
                 }
                 div { class: "ml-auto flex items-center gap-3",
                     if let Some(user) = user {

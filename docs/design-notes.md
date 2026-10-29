@@ -127,11 +127,40 @@ The home page shows every installed component; the plan is [COMPONENTS.md](COMPO
   component in `src/components/` is missing from the catalog or listed twice.
 - **Demos come from upstream's preview app** (MIT or Apache-2.0), with imports pointed at our components, copy in
   shadcn's style, initials instead of remote avatar images, and no debug logging.
-- **The sidebar runs in an iframe.** It is an app shell (`position: fixed`, `100svh`), so it gets its own route,
-  `/demos/sidebar`, outside the layout, and the card frames it, as shadcn previews blocks.
+- **The sidebar runs in an iframe.** It is an app shell (`position: fixed`, `100svh`), so the card frames the
+  `sidebar-07` block at `/blocks/sidebar-07`, outside the layout, as shadcn previews blocks.
 - **Cards are wrapped, not styled.** The stock `Card` drops a `class` it is given, so a wrapper cell carries the grid
   span, `min-w-0` and the anchor id; `grid-cols-1` lets a wide demo scroll inside its card instead of widening the
   page on a phone.
+
+## Blocks
+
+`/blocks` shows whole pages built only from our components, like [shadcn's blocks](https://ui.shadcn.com/blocks); the
+plan and status are in [BLOCKS.md](BLOCKS.md).
+
+- **One catalog.** `src/blocks/mod.rs` lists each block once (id, description, category, featured) and reads its
+  source with `include_str!`, so the Code tab always shows the file that renders the preview. Tests check that ids are
+  unique, every category has blocks and each block's source is its own file.
+- **Frames, lazy.** Each block is a full page at `/blocks/<id>`, outside the layout. The gallery frames it with
+  `loading="lazy"` and renders only the selected category, because every frame boots the whole app: 120 MB of wasm
+  in dev. A page that loads mid-rebuild has no CSS, so every frame is in view at once and Chrome stalls; reload it.
+- **Real logic.** Login and signup blocks are layouts around `ui::credentials` (`AuthForm`, `EmailField`,
+  `PasswordField`, `SubmitButton`, `SwitchPrompt`), the same form `/sign-in` and `/sign-up` use, so signing in inside a
+  frame really signs in. The old one-piece `ui::Field` became shadcn's field set, and the notes form uses it too.
+- **Nothing fake.** Full name, confirm password, forgot password, terms links and email-only sign-in need backend work
+  we do not have, so the blocks leave them out (login-05 keeps the password). Social sign-in and the newsletter button
+  are shown disabled, with a title saying they are not set up.
+- **The real auth pages keep their look.** The benchmark runs Lighthouse on `/sign-in` against its Nuxt twin, so
+  restyling that page would move a measured number.
+- **Sidebar parts are shared.** `src/blocks/sidebar/parts/` holds the sample data (fictional teams, no people), the
+  inset header and the menus. The team switcher, main nav, projects and user menu follow upstream's sidebar preview,
+  a Dioxus port of shadcn's sidebar-07; the sidebar's own `dx-sidebar-dropdown-menu*` classes open its menus to the side.
+- **A right sidebar comes first in the markup.** The wrapper flips the row with `row-reverse` when the sidebar is on
+  the right, so placing the sidebar after the inset put it back on the left.
+- **Tokens.** `tailwind.css` maps `surface`, `card`, `primary` and `primary-foreground` onto existing theme variables
+  for muted panels, separators on cards and the logo mark.
+- **Stock limits seen.** The avatar fallback uses a 1.5rem font and the page background at every size, so initials look
+  large in sidebars. The card ignores a `class` and the input sets its own padding, so neither is overridden.
 
 ## 404 status
 

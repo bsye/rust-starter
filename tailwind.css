@@ -6,6 +6,10 @@
   --color-muted: var(--secondary-color-5);
   --color-border: var(--primary-color-6);
   --color-destructive: var(--primary-error-color);
+  --color-surface: var(--primary-color-5);
+  --color-card: var(--light, var(--primary-color-2)) var(--dark, var(--primary-color-3));
+  --color-primary: var(--secondary-color-2);
+  --color-primary-foreground: var(--primary-color);
 }
 
 @layer base {
