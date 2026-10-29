@@ -3,11 +3,6 @@ name = "rust-starter"
 version = "0.1.0"
 edition = "2024"
 publish = false
-default-run = "rust-starter"
-
-[[bin]]
-name = "seed"
-required-features = ["server"]
 
 [dependencies]
 dioxus = { version = "=0.8.0-alpha.3", features = ["router", "fullstack"] }

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
-use crate::components::card::{Card, CardContent, CardHeader};
-use crate::components::skeleton::Skeleton;
+use rust_starter::components::card::{Card, CardContent, CardHeader};
+use rust_starter::components::skeleton::Skeleton;
 
 const SKELETON_CARDS: usize = 4;
 

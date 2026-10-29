@@ -2,10 +2,26 @@
 
 Why the starter is built the way it is. The plan lives in [STARTER.md](STARTER.md).
 
-## Dioxus 0.7, not 0.8
+## Dioxus 0.8 alpha on this branch
 
-0.8 is in alpha (alpha.3 on 2026-10-16) and its milestone is more than a year past its due date. 0.7.10 is the current
-stable release; we upgrade once when 0.8 ships.
+`main` stays on 0.7.10, the current stable release; 0.8 is in alpha (alpha.3 on 2026-10-16). This branch runs 0.8 for
+Rust hot-patching in the browser. On 0.7.10 with Rust 1.99, wasm patches fail with "exceptions proposal not enabled"
+(fixed in [#5843](https://github.com/DioxusLabs/dioxus/pull/5843), 0.8 only). With Rust 1.98 and wasm-bindgen pinned
+to 0.2.127, 0.7.10 patches the server, but the browser fails to load the patched wasm.
+
+## Hot-patching
+
+`dx serve --hot-patch` rebuilds only the binary crate and swaps the changed functions into the running server and
+browser, keeping their state.
+
+| Need | Why | Where |
+|---|---|---|
+| App code in the binary | `dx` patches the binary crate only; edits to code in the library were never applied | `src/main.rs` holds the module tree, `src/lib.rs` only the generated components |
+| Nightly in the image | the 0.8 dev server runs `cargo +nightly rustc --unit-graph` at startup; without nightly, rustup downloads it at runtime with no timeout, and a stalled download hung the dev server | `Dockerfile` base stage |
+| Signed-in user at the root | a patch remounts every component whose code changed; a remounted `use_server_cached` in the browser has no page data, so it called the server-only `request_user` and crashed the page | `use_current_user_provider` in `App`, the root, which is never remounted |
+
+A second binary would need the app code in a library to share it, so seeding is a subcommand of the main binary:
+`rust-starter seed <email> <count>`.
 
 ## One crate, not a workspace
 
@@ -72,8 +88,8 @@ Dioxus.
   server-render as `<!--placeholder-->`, which a textarea shows as text. We removed `children` from our copy (upstream
   main still has it). Re-apply this after any `dx components update`.
 - **Library crate.** Unused variants in the generated components (`ButtonVariant::Ghost`, ...) failed clippy's dead-code
-  check. Moving the module tree into `src/lib.rs` with `pub mod components` makes them public API instead of dead code,
-  with no lint suppressions. Our own modules stay private, so dead code there is still caught.
+  check. `src/lib.rs` holds only `pub mod components`, which makes them public API instead of dead code, with no lint
+  suppressions. Our own modules live in the binary (see Hot-patching), so dead code there is still caught.
 - **Tailwind never overrides component CSS.** Tailwind v4 puts utilities in `@layer utilities`, and the components' CSS
   is unlayered, so the component CSS always wins. To change a property a component sets, wrap it. Properties the
   component leaves open (a skeleton's size) can take Tailwind classes directly.
@@ -200,7 +216,8 @@ the change. Deleting sets `deleted_at` instead of removing the row, so no data i
 
 ## Signed-in user without suspending
 
-The layout reads the signed-in user with `use_server_cached(request_user)`: on the server it takes the user the session
+The root component reads the signed-in user with `use_server_cached(request_user)` (at the root, not in the layout: see
+Hot-patching): on the server it takes the user the session
 layer already loaded for this request, and the value travels to the browser inside the page. An earlier version fetched
 it with `use_server_future`, which suspended the whole layout and showed the problem below on every page.
 

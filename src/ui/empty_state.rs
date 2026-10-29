@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::card::Card;
+use rust_starter::components::card::Card;
 
 #[component]
 pub fn EmptyState(title: String, icon: Element, children: Element) -> Element {

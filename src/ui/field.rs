@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::label::Label;
+use rust_starter::components::label::Label;
 
 #[component]
 pub fn Field(label: String, id: String, error: Option<String>, children: Element) -> Element {

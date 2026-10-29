@@ -1,5 +1,6 @@
 mod audit;
 pub mod auth;
+mod command;
 mod config;
 mod db;
 mod entities;
@@ -8,9 +9,17 @@ pub mod notes;
 mod origin;
 mod seed;
 
+use command::Command;
 use dioxus::server::axum::{Extension, Router, middleware, routing::get};
 
-pub use seed::seed;
+pub fn run(args: impl Iterator<Item = String>) -> anyhow::Result<()> {
+    match Command::parse(args)? {
+        Command::Serve => dioxus::serve(router),
+        Command::Seed { email, count } => {
+            tokio::runtime::Runtime::new()?.block_on(seed::seed(&email, count))
+        }
+    }
+}
 
 pub async fn router() -> anyhow::Result<Router> {
     let config = config::Config::from_env()?;

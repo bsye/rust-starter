@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::app::Route;
-use crate::components::pagination::{
+use rust_starter::components::pagination::{
     Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious,
 };
 

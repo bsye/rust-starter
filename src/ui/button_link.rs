@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::components::button::{ButtonSize, ButtonVariant};
+use rust_starter::components::button::{ButtonSize, ButtonVariant};
 
 #[css_module("/src/components/button/style.css")]
 struct Styles;

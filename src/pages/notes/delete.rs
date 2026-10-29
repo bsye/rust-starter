@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 use dioxus_icons::lucide::Trash2;
 
-use crate::components::alert_dialog::{
+use crate::hooks::use_delete_note;
+use rust_starter::components::alert_dialog::{
     AlertDialog, AlertDialogAction, AlertDialogActions, AlertDialogCancel, AlertDialogDescription,
     AlertDialogTitle,
 };
-use crate::components::button::{Button, ButtonVariant};
-use crate::hooks::use_delete_note;
+use rust_starter::components::button::{Button, ButtonVariant};
 
 #[component]
 pub fn DeleteNoteButton(id: i64) -> Element {

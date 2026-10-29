@@ -19,8 +19,8 @@ Versions checked on 2026-10-28 against crates.io and Docker Hub. Reasons in [des
 | Layer | Choice | Version |
 |---|---|---|
 | Language | Rust (`rust:1.99-trixie` image) | 1.99.1 |
-| UI and server | [Dioxus](https://dioxuslabs.com/learn/0.7/) fullstack | 0.7.10 |
-| CLI | dioxus-cli (`dx`) | 0.7.10 |
+| UI and server | [Dioxus](https://dioxuslabs.com/learn/0.7/) fullstack | 0.8.0-alpha.3 |
+| CLI | dioxus-cli (`dx`), with Rust hot-patching | 0.8.0-alpha.3 |
 | HTTP | Axum, through Dioxus | 0.8 |
 | Database | Postgres | 18 |
 | Database access | [SeaORM](https://www.sea-ql.org/SeaORM/), queries and migrations in Rust | 2.0.4 |
@@ -45,16 +45,15 @@ Dioxus.toml
 tailwind.css
 assets/
 src/
-  main.rs         calls rust_starter::run()
-  lib.rs          module tree; serve on the server, launch in the browser
+  main.rs         module tree; serve or seed on the server, launch in the browser
+  lib.rs          the generated components, as a library
   app.rs          route enum and root component
   pages/          layout, sign-in guard, one file or folder per route, 404
   components/     output of dx components add, left as generated
   ui/             our shared UI built on the stock components
   hooks/          state and actions: forms, current user, sign-out, delete
   api/            shared types, validation and server functions (bodies run on the server only)
-  server/         server only: config, database, entities, migrations, queries, auth, audit, origin check
-  bin/seed.rs     fills the database with generated notes
+  server/         server only: config, database, entities, migrations, queries, auth, audit, origin check, seed command
 compose.yaml      app + db
 Dockerfile        dev and prod stages
 .devcontainer/    VS Code attaches to the app service
@@ -62,7 +61,8 @@ Dockerfile        dev and prod stages
 
 ## Dev environment
 
-- `app` service: Rust 1.99, the wasm target, `dx` 0.7.10 installed with cargo-binstall.
+- `app` service: Rust 1.99 plus nightly (the 0.8 dev server needs it), the wasm target, `dx` 0.8.0-alpha.3 installed with
+  cargo-binstall.
 - `db` service: `postgres:18` with a named volume.
 - Source is bind-mounted; `target/` and the cargo registry live in named volumes so builds stay fast on macOS.
 - `dx serve` listens on `0.0.0.0:8080` inside the container, published on host port 8090; hot reload uses the same port.
