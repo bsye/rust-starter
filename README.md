@@ -44,6 +44,7 @@ docker run -p 8080:8080 -e DATABASE_URL=postgres://... -e PUBLIC_URL=https://you
 | 3. Database | Postgres with SeaORM, migrations behind an advisory lock, paginated notes with totals, validated forms |
 | 4. Auth | Accounts with Argon2id, server-side sessions, an origin check, owner-scoped queries, soft delete and an audit trail |
 | 5. Production | Slim non-root image with pre-compressed assets and a healthcheck |
+| Faster dev loop | The mold linker with lighter debug info ([`faster-builds`](https://github.com/bsye/rust-starter/tree/faster-builds)), and Dioxus 0.8 alpha with Rust hot-patching in the server and browser ([`dioxus-0.8`](https://github.com/bsye/rust-starter/tree/dioxus-0.8)) |
 | [Benchmark](bench/REPORT.md) | The same app built the idiomatic Nuxt way in [`bench/nuxt`](bench/nuxt), measured on features, the developer loop and production by one script ([method](docs/BENCHMARK.md)) |
 
 Learning Rust was part of the goal: [docs/rust-notes.md](docs/rust-notes.md) maps every Rust concept each phase used to

@@ -238,6 +238,13 @@ Plan in [BENCHMARK.md](BENCHMARK.md); numbers in [bench/REPORT.md](../bench/REPO
 | Every request and command has a deadline | A dev server that never answered hung an earlier test run for hours; requests now give up after 10 s and docker commands after 30 minutes, and the run fails loudly |
 | Apps alternate within every metric | The first developer-loop pass ran all Rust metrics, then all Nuxt metrics. Re-measured on its own, Nuxt's first run, restart and checks were roughly twice as fast as in that pass, which ran after an hour of Rust compiling. Both parts of the harness now alternate the apps run by run |
 
+### What mold and hot-patching change
+
+On Rust code changes, most of the gain over plain 0.7 comes from mold and lighter debug info; hot-patching cuts the
+time further and keeps the page's state, where 0.7 reloads the page after every rebuild. Both still trail Nuxt on code
+changes, first run and restart, and 0.8's first run and restart are slower than 0.7's. In production, 0.8 idles at
+about three times 0.7's memory, which is not explained yet. Numbers in [bench/REPORT.md](../bench/REPORT.md).
+
 ### Why the Rust list page is slower than its API
 
 The Rust list page serves about a third of the requests per second of the JSON API behind it, while the detail page

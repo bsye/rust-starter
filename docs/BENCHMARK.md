@@ -106,7 +106,7 @@ this repo, TypeScript and JavaScript for the Nuxt app and harness, and no attemp
 Needs Docker and Node 20 or newer.
 
 ```sh
-node bench/run.mjs            # everything, about 75 minutes
+node bench/run.mjs            # everything, about 2 hours
 node bench/run.mjs production # one part: features, production or devloop
 ```
 
