@@ -1,7 +1,7 @@
 ARG RUST_VERSION=1.99
 FROM rust:${RUST_VERSION}-trixie AS base
 ARG BINSTALL_VERSION=1.26.1
-ARG DIOXUS_CLI_VERSION=0.7.10
+ARG DIOXUS_CLI_VERSION=0.8.0-alpha.3
 RUN apt-get update \
     && apt-get install -y --no-install-recommends mold \
     && rm -rf /var/lib/apt/lists/* \
@@ -20,7 +20,7 @@ WORKDIR /app
 
 FROM base AS dev
 EXPOSE 8080
-CMD ["dx", "serve", "--addr", "0.0.0.0", "--port", "8080"]
+CMD ["dx", "serve", "--addr", "0.0.0.0", "--port", "8080", "--hot-patch"]
 
 FROM base AS builder
 COPY . .
