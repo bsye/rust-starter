@@ -20,7 +20,7 @@ browser, keeping their state.
 |---|---|---|
 | App code in the binary | `dx` patches the binary crate only; edits to code in the library were never applied | `src/main.rs` holds the module tree, `src/lib.rs` only the generated components |
 | Nightly in the image | the 0.8 dev server runs `cargo +nightly rustc --unit-graph` at startup; without nightly, rustup downloads it at runtime with no timeout, and a stalled download hung the dev server | `Dockerfile` base stage |
-| Signed-in user at the root | a patch remounts every component whose code changed; a remounted `use_server_cached` in the browser has no page data, so it called the server-only `request_user` and crashed the page | `use_current_user_provider` in `App`, the root, which is never remounted |
+| Signed-in user at the root | a patch remounts every component whose code changed; a remounted `use_server_cached` in the browser has no page data, so it called the server-only `request_user` and crashed the page | `use_current_user_provider` and `use_analytics` in `App`, the root, which is never remounted |
 
 A second binary would need the app code in a library to share it, so seeding is a subcommand of the main binary:
 `rust-starter seed <email> <count>`.
@@ -235,6 +235,26 @@ stylesheet on every request, using the same `asset!(..., AssetOptions::css_modul
 
 `ui::Redirect` answers a server-rendered request with `303 See Other` and a `Location` header, and navigates in the
 browser otherwise, so a signed-out visit to `/notes` never renders the notes layout.
+
+## Analytics through PostHog
+
+- **Official SDKs on both sides.** [posthog-rs](https://posthog.com/docs/libraries/rust) sends the server events. The
+  browser runs PostHog's [official snippet](https://posthog.com/docs/libraries/js) (`src/analytics/posthog_init.js`)
+  through `document::eval`, because pageviews, autocapture and session replay exist only in posthog-js. The crate's
+  default features are off: error tracking is unused and pulls in `backtrace`.
+- **Off when unset.** Without `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` nothing is sent; setting only one fails startup.
+- **One person per user.** Browser `identify` and server events both use `analytics::distinct_id`, the database id. The
+  email never goes to PostHog.
+- **Reset only on sign-out.** `reset()` runs when a signed-in user signs out, not on every anonymous page load, which
+  would give each visit a new anonymous id.
+- **Flush on exit.** `dioxus::serve` never returns, so nothing runs after it. PostHog's docs say queued events are lost
+  without a shutdown, so `analytics::start` waits for SIGTERM or Ctrl+C, flushes for at most 5 s (inside Docker's 10 s
+  stop grace) and exits.
+- **One client per process.** posthog-rs keeps a global client; a hot patch rebuilds the router and calls `start` again,
+  which gets `AlreadyInitialized` and keeps the running client.
+- **The token reaches the browser by design.** A project token is public; it ships in every posthog-js page. The
+  settings travel inside the page through `use_server_cached`, read in the root component like the signed-in user, so a
+  hot patch cannot remount the hook (see Hot-patching).
 
 ## Benchmark fairness
 

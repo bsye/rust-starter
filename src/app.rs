@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 
+use crate::analytics::use_analytics;
 use crate::hooks::use_current_user_provider;
 use crate::pages::{
     EditNote, Home, NewNote, NotFound, NoteDetail, Notes, RequireUser, Shell, SignIn, SignUp,
@@ -50,7 +51,8 @@ impl Route {
 
 #[component]
 pub fn App() -> Element {
-    use_current_user_provider();
+    let current = use_current_user_provider();
+    use_analytics(current);
     rsx! {
         document::Stylesheet { href: THEME_CSS }
         document::Stylesheet { href: TAILWIND_CSS }

@@ -14,6 +14,9 @@ Needs Docker only.
    hot reload.
 3. In VS Code, run **Dev Containers: Reopen in Container** to get rust-analyzer inside the `app` container.
 
+Analytics are off until `POSTHOG_PROJECT_TOKEN` and `POSTHOG_HOST` are both set, in `.env` for development or as
+environment variables in production ([why](docs/design-notes.md#analytics-through-posthog)).
+
 Fill an account with 10,000 generated notes:
 
 ```sh
