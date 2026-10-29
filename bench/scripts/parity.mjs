@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { REQUEST_TIMEOUT_MS } from './lib.mjs'
 
 export const APPS = {
   rust: {
@@ -24,7 +25,7 @@ export function client(app, cookie) {
     const headers = { 'content-type': 'application/json' }
     if (origin) headers.origin = app.origin
     if (cookie) headers.cookie = cookie
-    const response = await fetch(app.url + path, { method, headers, body: body && JSON.stringify(body), redirect: 'manual' })
+    const response = await fetch(app.url + path, { method, headers, body: body && JSON.stringify(body), redirect: 'manual', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
     const text = await response.text()
     let json
     try {

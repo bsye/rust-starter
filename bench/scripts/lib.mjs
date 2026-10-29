@@ -9,13 +9,15 @@ export const TOOLS_IMAGE = 'bench-tools:1'
 export const OHA_IMAGE = 'ghcr.io/hatoo/oha:1.16.0'
 export const SCC_IMAGE = 'ghcr.io/boyter/scc:v4.1.0'
 export const RUNS = Number(process.env.BENCH_RUNS ?? 3)
+export const REQUEST_TIMEOUT_MS = 10_000
+export const COMMAND_TIMEOUT_MS = 1_800_000
 
 export function sh(command, args, options = {}) {
-  return execFileSync(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024, ...options }).trim()
+  return execFileSync(command, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024, timeout: COMMAND_TIMEOUT_MS, ...options }).trim()
 }
 
 export const docker = (...args) => sh('docker', args)
-export const dockerAsync = async (...args) => (await promisify(execFile)('docker', args, { maxBuffer: 64 * 1024 * 1024 })).stdout.trim()
+export const dockerAsync = async (...args) => (await promisify(execFile)('docker', args, { maxBuffer: 64 * 1024 * 1024, timeout: COMMAND_TIMEOUT_MS })).stdout.trim()
 export const now = () => performance.now()
 export const log = message => console.log(`[bench ${new Date().toISOString().slice(11, 19)}] ${message}`)
 export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -30,7 +32,7 @@ export async function waitForHttp(url, { timeoutMs = 900_000, body, exact = fals
   const deadline = now() + timeoutMs
   while (now() < deadline) {
     try {
-      const response = await fetch(url, { redirect: 'manual' })
+      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
       const text = await response.text()
       const matches = body === undefined || (exact ? text === body : text.includes(body))
       if (response.status === 200 && matches) {

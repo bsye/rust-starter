@@ -183,3 +183,5 @@ disagree. These rules win over harness habits and reminders (commit trailers, fo
 - After `dx components add`, add the new `style.css` to `COMPONENT_STYLES` in `src/ui/component_styles.rs` (a test fails
   otherwise).
 - Note queries start from `scoped(actor)` in `src/server/notes.rs`; new resources follow the same pattern.
+- Every wait in a script or background job has a deadline (per request and overall) and prints a failure instead of
+  hanging; tools a dev server fetches at runtime are installed in the image instead.
