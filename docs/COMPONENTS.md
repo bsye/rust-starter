@@ -1,8 +1,8 @@
 # Plan: expand the Dioxus component library
 
 Goal: every [shadcn/ui](https://ui.shadcn.com/docs/components) component exists for Dioxus, and the starter's home page
-shows all of them. What [dioxus-components](https://github.com/DioxusLabs/components) lacks we build in its format, so
-anyone can install it with `dx components add` and it can go upstream. Status: planned, not started.
+shows all of them. What [dioxus-components](https://github.com/DioxusLabs/components) lacks we build in its format, in
+our own registry repo, so anyone can install it with `dx components add --git`. Status: phase 1 in progress.
 
 ## Decisions
 
@@ -12,6 +12,8 @@ anyone can install it with `dx components add` and it can go upstream. Status: p
 | Chat components | In scope, all six |
 | Charts | Built in Rust; no prebuilt Rust charts exist for Dioxus |
 | Dioxus-only components | On the page too |
+| Where new components live | A public registry repo under `bsye`, in the dioxus-components format, using the same `dioxus-primitives` pin |
+| The TLS bug in `dx components` | Worked around with a local clone, not reported |
 
 ## What exists (checked 2026-10-29)
 
@@ -43,8 +45,9 @@ anyone can install it with `dx components add` and it can go upstream. Status: p
 
 ## Blocker and workaround
 
-`dx components` 0.8.0-alpha.3 cannot download any registry over https ("there is no TLS stream available"); not
-reported upstream yet. A registry cloned with the system `git` works: `dx components add --git file:///<clone>`.
+`dx components` 0.8.0-alpha.3 cannot download any registry over https ("there is no TLS stream available"). A registry
+cloned with the system `git` works: `dx components add --git file:///<clone>`. A script does the clone at the pinned
+commit, so adding a component stays one command.
 
 ## Acceptance criteria
 
@@ -73,8 +76,8 @@ reported upstream yet. A registry cloned with the system `git` works: `dx compon
 
 | # | Phase | Delivers |
 |---|---|---|
-| 1 | Upstream set | The 36 components from the 0.8 registry we do not have, and the home page with sections and contents |
-| 2 | Small gaps | Alert, breadcrumb, button group, empty, field, input group, kbd, native select, spinner |
+| 1 | Upstream set | The 35 components from the 0.8 registry we did not have (all but the empty `form`), installed; the home page with sections and contents |
+| 2 | Registry repo and small gaps | The registry repo with checks, then alert, breadcrumb, button group, empty, field, input group, kbd, native select, spinner |
 | 3 | Large gaps | Carousel, command, drawer, navigation menu, resizable; table and input OTP from their open PRs |
 | 4 | Charts | Area, bar, line, pie and radial charts in SVG, matching shadcn's chart examples |
 | 5 | Chat | Attachment, bubble, direction, marker, message, message scroller |

@@ -84,9 +84,18 @@ git.
 `src/components/` and themes them through `assets/dx-components-theme.css`. That is the stock-component route for
 Dioxus.
 
-- **Left as generated, with one patch.** `src/components/` is `dx` output, so `dx components update` can refresh it.
-  Our own shared UI lives in `src/ui/`. `dx components add` rewrites the `dioxus-primitives` git line, so the commit pin
-  lives in `Cargo.lock`. One patch: the generated `Textarea` rendered `{children}` inside `<textarea>`; empty children
+- **Added through `scripts/components.sh`.** Plain `dx components add` fails on Dioxus 0.8 alpha three ways: the
+  0.8.0-alpha.3 binary cannot fetch a registry over https ("there is no TLS stream available"); upstream's manifests on
+  the [`dioxus-v0.8.0-alpha.3`](https://github.com/DioxusLabs/components/tree/dioxus-v0.8.0-alpha.3) branch ask for
+  `dioxus-primitives` without a commit and `dioxus-icons` 0.1.0, both built for Dioxus 0.7; and bare component
+  dependencies are fetched from the default https registry. The script clones that branch at the commit our
+  `Cargo.lock` pins, sets both versions in the clone's manifests to the ones `Cargo.lock` already has, points component
+  dependencies at the clone, and adds from it. `dx` caches a registry by URL and commit, so the clone is used through
+  one URL and its checked-out branch, and the cache is cleared first. The JSON editing uses Python's standard library,
+  which the image already has. Upstream's `form` is an empty placeholder (its re-export failed clippy), so it is not
+  installed; shadcn's form is a pattern of field, label and input.
+- **Left as generated, with one patch.** `src/components/` is `dx` output; our own shared UI lives in `src/ui/`. One
+  patch: the generated `Textarea` rendered `{children}` inside `<textarea>`; empty children
   server-render as `<!--placeholder-->`, which a textarea shows as text. We removed `children` from our copy (upstream
   main still has it). Re-apply this after any `dx components update`.
 - **Library crate.** Unused variants in the generated components (`ButtonVariant::Ghost`, ...) failed clippy's dead-code
