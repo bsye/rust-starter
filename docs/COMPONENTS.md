@@ -2,7 +2,7 @@
 
 Goal: every [shadcn/ui](https://ui.shadcn.com/docs/components) component exists for Dioxus, and the starter's home page
 shows all of them. What [dioxus-components](https://github.com/DioxusLabs/components) lacks we build in its format, in
-our own registry repo, so anyone can install it with `dx components add --git`. Status: phase 1 in progress.
+our own registry repo, so anyone can install it with `dx components add --git`. Status: phase 1 done; phase 2 next.
 
 ## Decisions
 

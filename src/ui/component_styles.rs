@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-const COMPONENT_STYLES: [Asset; 43] = [
+const COMPONENT_STYLES: [Asset; 41] = [
     asset!(
         "/src/components/accordion/style.css",
         AssetOptions::css_module()
@@ -104,10 +104,6 @@ const COMPONENT_STYLES: [Asset; 43] = [
         AssetOptions::css_module()
     ),
     asset!(
-        "/src/components/scroll_area/style.css",
-        AssetOptions::css_module()
-    ),
-    asset!(
         "/src/components/select/style.css",
         AssetOptions::css_module()
     ),
@@ -158,10 +154,6 @@ const COMPONENT_STYLES: [Asset; 43] = [
     ),
     asset!(
         "/src/components/tooltip/style.css",
-        AssetOptions::css_module()
-    ),
-    asset!(
-        "/src/components/virtual_list/style.css",
         AssetOptions::css_module()
     ),
 ];

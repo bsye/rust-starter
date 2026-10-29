@@ -92,12 +92,15 @@ Dioxus.
   `Cargo.lock` pins, sets both versions in the clone's manifests to the ones `Cargo.lock` already has, points component
   dependencies at the clone, and adds from it. `dx` caches a registry by URL and commit, so the clone is used through
   one URL and its checked-out branch, and the cache is cleared first. The JSON editing uses Python's standard library,
-  which the image already has. Upstream's `form` is an empty placeholder (its re-export failed clippy), so it is not
+  which the image already has. Our `web` feature turns on `dioxus-primitives/web` (the browser clock for `time`), as
+  upstream's preview does; without it the calendar panics in the browser with "time not implemented on this platform".
+  Upstream's `form` is an empty placeholder (its re-export failed clippy), so it is not
   installed; shadcn's form is a pattern of field, label and input.
-- **Left as generated, with one patch.** `src/components/` is `dx` output; our own shared UI lives in `src/ui/`. One
-  patch: the generated `Textarea` rendered `{children}` inside `<textarea>`; empty children
+- **Left as generated, with two patches.** `src/components/` is `dx` output; our own shared UI lives in `src/ui/`. The
+  generated `scroll_area` and `virtual_list` stylesheets hold only a comment, the components never load them, and
+  `dx`'s CSS-module step rejects a file with no rules, so we deleted both. The other patch: the generated `Textarea` rendered `{children}` inside `<textarea>`; empty children
   server-render as `<!--placeholder-->`, which a textarea shows as text. We removed `children` from our copy (upstream
-  main still has it). Re-apply this after any `dx components update`.
+  main still has it). Re-apply both after any `dx components update`.
 - **Library crate.** Unused variants in the generated components (`ButtonVariant::Ghost`, ...) failed clippy's dead-code
   check. `src/lib.rs` holds only `pub mod components`, which makes them public API instead of dead code, with no lint
   suppressions. Our own modules live in the binary (see Hot-patching), so dead code there is still caught.
@@ -113,6 +116,21 @@ Dioxus.
   The router's own `aria-current` only matches the exact URL, so it went dark on `/notes?page=2` and `/notes/7`.
 - **Icons.** [dioxus-icons](https://github.com/dioxuslabs/dioxus-icons) (Lucide, the icon family shadcn uses). The
   generated pagination already depends on it, so it replaced `dioxus-free-icons` to keep one icon set.
+
+## Component showcase
+
+The home page shows every installed component; the plan is [COMPONENTS.md](COMPONENTS.md).
+
+- **One catalog.** `src/pages/home/catalog.rs` lists each component once (id, name, category, width). A macro turns
+  each entry into a real component call, so demos keep their own scope and still hot-patch. A test fails when a
+  component in `src/components/` is missing from the catalog or listed twice.
+- **Demos come from upstream's preview app** (MIT or Apache-2.0), with imports pointed at our components, copy in
+  shadcn's style, initials instead of remote avatar images, and no debug logging.
+- **The sidebar runs in an iframe.** It is an app shell (`position: fixed`, `100svh`), so it gets its own route,
+  `/demos/sidebar`, outside the layout, and the card frames it, as shadcn previews blocks.
+- **Cards are wrapped, not styled.** The stock `Card` drops a `class` it is given, so a wrapper cell carries the grid
+  span, `min-w-0` and the anchor id; `grid-cols-1` lets a wide demo scroll inside its card instead of widening the
+  page on a phone.
 
 ## 404 status
 

@@ -38,7 +38,7 @@ debug = false
 
 [features]
 default = ["web"]
-web = ["dioxus/web"]
+web = ["dioxus/web", "dioxus-primitives/web"]
 server = [
     "dioxus/server",
     "dep:anyhow",
